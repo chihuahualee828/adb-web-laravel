@@ -1,0 +1,52 @@
+
+#map {
+    height: 400px;
+    }
+    
+.map-popup {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 12px 16px;
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    font-size: 0.875rem;
+    z-index: 1000;
+    pointer-events: none;
+    transition: opacity 0.2s ease-in-out;
+    }
+
+.map-popup-btn {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+
+}
+    
+.map-popup-btn:hover {
+    background-color: #157347;
+}
+
+
+.map-popup .popup-search-btn {
+    background-color: #3b82f6; /* blue-500 */
+    color: white;
+    border: none;
+    padding: 6px 16px;
+    font-size: 0.8rem;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 8px;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    }
+
+.map-popup .popup-search-btn:hover {
+    background-color: #2563eb; /* blue-600 */
+    }
+
+.map-popup .popup-search-btn:active {
+    transform: scale(0.97);
+    background-color: #1d4ed8; /* blue-700 */
+    }

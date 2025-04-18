@@ -1,0 +1,4 @@
+/* resources/css/app.css */
+@import './dashboard.css';
+@import './map.css';
+@import "bootstrap/dist/css/bootstrap.min.css";
