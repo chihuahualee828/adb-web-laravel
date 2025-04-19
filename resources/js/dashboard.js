@@ -1,5 +1,6 @@
-import { submitQuery, search, checkLayer } from './query.js';
-import {drawPoints, generateDataTable } from './drawpoints.js';
+import { submitQuery, search, checkLayer, unCheckLayer, currentRequestToken } from './query.js';
+import {drawPoints } from './drawpoints.js';
+import { drawPieChart, generateDataTable } from './drawpPie.js';
 
   // Event listener for the Apply button
   document.addEventListener('DOMContentLoaded', () => {
@@ -18,18 +19,47 @@ import {drawPoints, generateDataTable } from './drawpoints.js';
             season: parseInt(season.value),
         };
         localStorage.setItem('filters', JSON.stringify(filters));
-        filters = [
-            filters.query !== 0 ? query.options[filters.query].text : 0,
-            filters.county !== 0 ? county.options[filters.county].text : 0,
-            filters.district !== 0 ? district.options[filters.district].text : 0,
-            filters.season !== 0 ? season.options[filters.season].text : 0
-        ];
 
-        submitQuery(filters).then(data => {
+        if(filters.query == 0) {   
+            alert("Please select a query");
+            return;
+        }
+
+        filters = {
+            query : filters.query !== 0 ? query.options[filters.query].text : 0,
+            county : filters.county !== 0 ? county.options[filters.county].text : 0,
+            district : filters.district !== 0 ? district.options[filters.district].text : 0,
+            season : filters.season !== 0 ? season.options[filters.season].text : 0
+        };
+        
+        submitQuery(filters).then(response => {
+            if (!response || response.token !== currentRequestToken) {
+                console.log('Stale request ignored');
+                return; // ignore stale
+            }
+            const data = response.data;
             console.log("Query result:", data);
             if (data && data.rows.length > 0) {
                 drawPoints(data, "dollar");
                 generateDataTable(data);
+                if(filters.query == "Best Seller"){
+					const product_id = data.rows[0][data.fields.indexOf("product_id")];
+                    console.log("Product ID:", product_id);
+                    setTimeout(() => {
+                        drawPieChart({ searchText: product_id, searchBy: "product_id", groupBy: "county" });
+                        drawPieChart({ searchText: product_id, searchBy: "product_id", groupBy: "district", county: filters.county });
+                        drawPieChart({ searchText: product_id, searchBy: "product_id", groupBy: "season" });
+                    }, 0 );
+				}else if (filters.query == "Top Category") {
+					const primary_category = data.rows[0][data.fields.indexOf("primary_category")];
+                    console.log("Product Category:", primary_category);
+                    setTimeout(() => {
+                        drawPieChart({ searchText: primary_category, searchBy: "primary_category", groupBy: "county" });
+                        drawPieChart({ searchText: primary_category, searchBy: "primary_category", groupBy: "district", county: filters.county });
+                        drawPieChart({ searchText: primary_category, searchBy: "primary_category", groupBy: "season" });
+                    }, 0 );
+				}
+
             } else {
                 alert("No results found");
             }
@@ -46,33 +76,45 @@ import {drawPoints, generateDataTable } from './drawpoints.js';
       searchBtn.addEventListener('click', () => {
         const text = searchInput.value.trim();
         if (text !== "") {
-          search(text).then(data => {
+          search(text).then(response => {
+            if (!response || response.token !== currentRequestToken) {
+                console.log('Stale request ignored');
+                return; // ignore stale
+            }
+            const data = response.data;
             if (data && data.rows.length > 0) {
-              drawPoints(data, "dollar");
-              generateDataTable(data);
+                drawPoints(data, "dollar");
+                generateDataTable(data);
+                
+                if(data.fields.indexOf("product_id")==0){
+                    const product_id = data.rows[0][data.fields.indexOf("product_id")];
+                    setTimeout(() => {
+                        drawPieChart({ searchText: product_id, searchBy: "product_id", groupBy: "county" });
+                        drawPieChart({ searchText: product_id, searchBy: "product_id", groupBy: "district"});
+                        drawPieChart({ searchText: product_id, searchBy: "product_id", groupBy: "season" });
+                    }, 0 );
+                }else if(data.fields.indexOf("product_name")==0){
+                    const product_name = data.rows[0][data.fields.indexOf("product_name")];
+                    setTimeout(() => {
+                        drawPieChart({ searchText: product_name, searchBy: "product_name", groupBy: "county" });
+                        drawPieChart({ searchText: product_name, searchBy: "product_name", groupBy: "district"});
+                        drawPieChart({ searchText: product_name, searchBy: "product_name", groupBy: "season" });
+                    }, 0 );
+                }else if(data.fields.indexOf("primary_category")==0){
+                    const primary_category = data.rows[0][data.fields.indexOf("primary_category")];
+                    setTimeout(() => {
+                        drawPieChart({ searchText: primary_category, searchBy: "primary_category", groupBy: "county" });
+                        drawPieChart({ searchText: primary_category, searchBy: "primary_category", groupBy: "district"});
+                        drawPieChart({ searchText: primary_category, searchBy: "primary_category", groupBy: "season" });
+                    }, 0 );
+                }
+            
             } else {
               alert("No results found");
             }
           });
           
-        //   if (data.rows && data.rows.length > 0) {
-        //     draw_points(data.rows, "dollar"); // Assuming this function uses the raw row data
-        //     generateDataTable(data.columns, data.rows); // Provide both columns and data
-      
-        //     // const firstCol = data.columns[0];
-        //     // if (firstCol === "product_id") {
-        //     //   draw_pie_chart(text, "product_id", "county");
-        //     //   draw_pie_chart(text, "product_id", "season");
-        //     // } else if (firstCol === "product_name") {
-        //     //   draw_pie_chart(text, "product_name", "county");
-        //     //   draw_pie_chart(text, "product_name", "season");
-        //     // } else if (firstCol === "primary_category") {
-        //     //   draw_pie_chart(text, "primary_category", "county");
-        //     //   draw_pie_chart(text, "primary_category", "season");
-        //     // }
-        //   } else {
-        //     window.alert("no result");
-        //   }
+
         }
       });
     }
@@ -162,15 +204,27 @@ import {drawPoints, generateDataTable } from './drawpoints.js';
     });
 
     querySelect.addEventListener('change', () => {
-        if (querySelect.value == 3) {
+        if (querySelect.value == 0) {
+            countySelect.value = 0;
+            countySelect.disabled = true;
+            districtSelect.value = 0;
+            districtSelect.disabled = true;
             seasonSelect.value = 0;
             seasonSelect.disabled = true;
-        }
-        else {
+        } else if (querySelect.value == 3) {
+            countySelect.disabled = false;
+            districtSelect.disabled = false;
+            seasonSelect.value = 0;
+            seasonSelect.disabled = true;
+        } else {
+            countySelect.disabled = false;
+            districtSelect.disabled = false;
             seasonSelect.disabled = false;
         }
       }
     );
+
+    
 
   });
 
@@ -181,22 +235,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const county = document.getElementById("county");
     const district = document.getElementById("district");
     const season = document.getElementById("season");
-    const layerDistrict = document.getElementById("layerDistrict");
-    const layerCounty = document.getElementById("layerCounty");
-    
-    // 🧠 Load from localStorage if saved
-    const layerSettings = JSON.parse(localStorage.getItem("layerSettings"));
-    if (layerSettings) {
-      layerDistrict.checked = layerSettings.district ?? false;
-      layerCounty.checked = layerSettings.county ?? false;
-      
-      if (layerDistrict.checked) {
-        checkLayer(layerDistrict.id);
-      }
-      if (layerCounty.checked) {
-        checkLayer(layerCounty.id);
-      }
-    }
 
     const saved = JSON.parse(localStorage.getItem("filters"));
     console.log("Saved filters:", saved);
@@ -207,6 +245,7 @@ document.addEventListener("DOMContentLoaded", function () {
       county.value = saved.county || 0;
       season.value = saved.season || 0;
       
+
       // Populate district based on restored county
       const selectedCounty = county.options[county.value].text;
       const districts = towndict[selectedCounty] || [];
@@ -224,6 +263,17 @@ document.addEventListener("DOMContentLoaded", function () {
         district.appendChild(option);
       });
       district.value = saved.district || 0;
+      
+    }
+    if (query.value == 0) {
+        county.value = 0;
+        county.disabled = true;
+        district.value = 0;
+        district.disabled = true;
+        season.value = 0;
+        season.disabled = true;
+    } else if (query.value == 3) {
+        season.disabled = true;
     }
   });
   
@@ -233,27 +283,64 @@ document.addEventListener("DOMContentLoaded", function () {
     const layerDistrict = document.getElementById("layerDistrict");
     const layerCounty = document.getElementById("layerCounty");
     
-  
-    // 💾 Save on change
-    layerDistrict.addEventListener("change", () => {
-      const settings = {
-        district: layerDistrict.checked,
-        county: layerCounty.checked,
-      };
-      localStorage.setItem("layerSettings", JSON.stringify(settings));
+        // 🧠 Load from localStorage if saved
+    const layerSettings = JSON.parse(localStorage.getItem("layerSettings"));
+    if (layerSettings) {
+        // layerDistrict.checked = layerSettings.district ?? false;
+        // layerCounty.checked = layerSettings.county ?? false;
+        
+        if (layerSettings.district) {
+            layerDistrict.classList.add("active");
+            checkLayer(layerDistrict.id);
+        }
+        if (layerSettings.county) {
+            layerCounty.classList.add("active");
+            checkLayer(layerCounty.id);
+        }
+    }
+    // // 💾 Save on change
+    // layerDistrict.addEventListener("change", () => {
+    //   const settings = {
+    //     district: layerDistrict.checked,
+    //     county: layerCounty.checked,
+    //   };
+    //   localStorage.setItem("layerSettings", JSON.stringify(settings));
 
-      checkLayer(layerDistrict.id);
-    });
+    //   checkLayer(layerDistrict.id);
+    // });
   
-    layerCounty.addEventListener("change", () => {
-      const settings = {
-        district: layerDistrict.checked,
-        county: layerCounty.checked,
-      };
-      localStorage.setItem("layerSettings", JSON.stringify(settings));
+    // layerCounty.addEventListener("change", () => {
+    //   const settings = {
+    //     district: layerDistrict.checked,
+    //     county: layerCounty.checked,
+    //   };
+    //   localStorage.setItem("layerSettings", JSON.stringify(settings));
 
-      checkLayer(layerCounty.id);
-    });
+    //   checkLayer(layerCounty.id);
+    // });
+
+    // Handle toggle logic
+    function toggleLayer(layerEl, key) {
+        layerEl.classList.toggle("active");
+        // Save to localStorage
+        const settings = {
+            district: layerDistrict.classList.contains("active"),
+            county: layerCounty.classList.contains("active"),
+        };
+        localStorage.setItem("layerSettings", JSON.stringify(settings));
+
+        if (layerEl.classList.contains("active")) {
+            checkLayer(key); // 🔁 Update layer visibility
+        } else {
+            unCheckLayer(key); // 🔁 Hide layer
+        }
+    }
+
+    // 👂 Add event listeners
+    layerDistrict.addEventListener("click", () => toggleLayer(layerDistrict, "layerDistrict"));
+    layerCounty.addEventListener("click", () => toggleLayer(layerCounty, "layerCounty"));
+
+    
   });
 
 
@@ -281,10 +368,38 @@ document.addEventListener('click', function (e) {
     if (searchBtn) {
         const searchText = searchBtn.dataset.search;
         if (searchText) {
-            search(searchText).then(data => {
+            search(searchText).then(response => {
+                if (!response || response.token !== currentRequestToken) {
+                    console.log('Stale request ignored');
+                    return; // ignore stale
+                }
+                const data = response.data;
+
                 if (data && data.rows.length > 0) {
                     drawPoints(data, "dollar");
                     generateDataTable(data);
+                    if(data.fields.indexOf("product_id")==0){
+                        const product_id = data.rows[0][data.fields.indexOf("product_id")];
+                        setTimeout(() => {
+                            drawPieChart({ searchText: product_id, searchBy: "product_id", groupBy: "county" });
+                            drawPieChart({ searchText: product_id, searchBy: "product_id", groupBy: "district"});
+                            drawPieChart({ searchText: product_id, searchBy: "product_id", groupBy: "season" });
+                        }, 0 );
+                    }else if(data.fields.indexOf("product_name")==0){
+                        const product_name = data.rows[0][data.fields.indexOf("product_name")];
+                        setTimeout(() => {
+                            drawPieChart({ searchText: product_name, searchBy: "product_name", groupBy: "county" });
+                            drawPieChart({ searchText: product_name, searchBy: "product_name", groupBy: "district"});
+                            drawPieChart({ searchText: product_name, searchBy: "product_name", groupBy: "season" });
+                        }, 0 );
+                    }else if(data.fields.indexOf("primary_category")==0){
+                        const primary_category = data.rows[0][data.fields.indexOf("primary_category")];
+                        setTimeout(() => {
+                            drawPieChart({ searchText: primary_category, searchBy: "primary_category", groupBy: "county" });
+                            drawPieChart({ searchText: primary_category, searchBy: "primary_category", groupBy: "district"});
+                            drawPieChart({ searchText: primary_category, searchBy: "primary_category", groupBy: "season" });
+                        }, 0 );
+                    }
                 } else {
                     alert("No results found");
                 }
@@ -299,46 +414,118 @@ let savedLayers = {};
 let layerCount = 0;
 
 import { markersArray, infoWindows } from './drawpoints.js';
-
+let lastSavedMarkersArray;
 document.getElementById("saveLayerBtn").addEventListener("click", () => {
-  if (!markersArray || markersArray.length === 0) {
-    // alert("No markers to save!");
-    return;
-  }
+    if (!markersArray || markersArray.length === 0) {
+        // alert("No markers to save!");
+        return;
+    }
 
-  const currentLayerId = `layer_${++layerCount}`;
-//   savedLayers[currentLayerId] = [...markersArray];
- savedLayers[currentLayerId] = markersArray.map((marker, i) => ({
-    marker,
-    infoWindow: infoWindows[i], // assumes same order
-  }));
+    if (lastSavedMarkersArray) {
+        const isSame = markersArray.length === lastSavedMarkersArray.length && markersArray.every((marker, i) => marker === lastSavedMarkersArray[i]);
+        if (isSame) {
+            console.log("Markers unchanged — skip saving.");
+            return;
+        }
+    } else {
+        lastSavedMarkersArray = [...markersArray];
+    }
+    
 
-  // Create checkbox
-  const label = document.createElement("label");
-  label.className = "form-check-label";
-  label.innerText = `Layer ${layerCount}`;
+        
+    const currentLayerId = `layer_${++layerCount}`;
+    //   savedLayers[currentLayerId] = [...markersArray];
+    savedLayers[currentLayerId] = markersArray.map((marker, i) => ({
+        marker,
+        infoWindow: infoWindows[i], // assumes same order
+    }));
 
-  const checkbox = document.createElement("input");
-  checkbox.type = "checkbox";
-  checkbox.className = "form-check-input me-1";
-  checkbox.checked = true;
-  checkbox.id = currentLayerId;
+    // // Create checkbox
+    // const label = document.createElement("label");
+    // label.className = "form-check-label";
+    // label.innerText = `Layer ${layerCount}`;
 
-//   checkbox.addEventListener("change", function () {
-//     const visible = this.checked;
-//     savedLayers[currentLayerId].forEach(marker => marker.setVisible(visible));
-//   });
-checkbox.addEventListener("change", function () {
-    const visible = this.checked;
-    savedLayers[currentLayerId].forEach(({ marker, infoWindow }) => {
-      marker.setVisible(visible);
-      if (!visible) infoWindow.close(); // close if layer is hidden
+    // Create a new toggle-style block
+    const toggle = document.createElement("div");
+    toggle.className = "layer-block active"; // start active
+    toggle.textContent = `Layer ${layerCount}`;
+    toggle.dataset.layer = currentLayerId;
+
+    // const checkbox = document.createElement("input");
+    // checkbox.type = "checkbox";
+    // checkbox.className = "form-check-input me-1";
+    // checkbox.checked = true;
+    // checkbox.id = currentLayerId;
+
+    // //   checkbox.addEventListener("change", function () {
+    // //     const visible = this.checked;
+    // //     savedLayers[currentLayerId].forEach(marker => marker.setVisible(visible));
+    // //   });
+    // checkbox.addEventListener("change", function () {
+    //     const visible = this.checked;
+    //     savedLayers[currentLayerId].forEach(({ marker, infoWindow }) => {
+    //     marker.setVisible(visible);
+    //     if (!visible) infoWindow.close(); // close if layer is hidden
+    //     });
+    // });
+
+
+
+    toggle.addEventListener("click", function () {
+        const isActive = this.classList.toggle("active");
+        savedLayers[currentLayerId].forEach(({ marker, infoWindow }) => {
+            marker.setVisible(isActive);
+            if (!isActive) infoWindow.close();
+        });
+    });
+
+    const container = document.getElementById("customLayers");
+    container.classList.remove("d-none");
+    container.appendChild(toggle);
+
+
+    // const wrapper = document.createElement("div");
+    // wrapper.className = "form-check";
+    // wrapper.appendChild(checkbox);
+    // wrapper.appendChild(label);
+
+    document.getElementById("customLayers").appendChild(wrapper);
+});
+
+
+
+
+import { submitChatMessage } from './aiUtils.js';
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    const chatForm = document.getElementById("chatForm");
+  
+    chatForm.addEventListener("submit", function (e) {
+    //   e.preventDefault();
+      sendChatMessage();
     });
   });
-  const wrapper = document.createElement("div");
-  wrapper.className = "form-check";
-  wrapper.appendChild(checkbox);
-  wrapper.appendChild(label);
+  
+  function sendChatMessage() {
+    const input = document.getElementById("chatInput");
+    const message = input.value.trim();
+    
+  
+    if (message) {
+      const welcome = document.getElementById("chatWelcome");
+      if (welcome) welcome.style.display = "none";
+      const chatBox = document.getElementById("chatMessages");
+  
+      const bubble = document.createElement("div");
+      bubble.className = "chat-bubble user-msg";
+      bubble.textContent = message;
+  
+      chatBox.appendChild(bubble);
+      input.value = "";
+      chatBox.scrollTop = chatBox.scrollHeight;
+      submitChatMessage(message);
 
-  document.getElementById("customLayers").appendChild(wrapper);
-});
+      
+    }
+  }

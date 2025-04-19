@@ -15,3 +15,7 @@ Route::post('/search', [QueryController::class, 'search']);
 use App\Http\Controllers\LayerController;
 
 Route::post('/get-layer', [LayerController::class, 'getLayer']);
+
+
+use App\Http\Controllers\ChartController;
+Route::post('/chart-data', [ChartController::class, 'getPieChartData']);

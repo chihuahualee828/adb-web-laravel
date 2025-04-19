@@ -5,12 +5,12 @@ export let markersArray = [];
 export let infoWindows = [];
 export function drawPoints(response, icon) {
     const bounds = new google.maps.LatLngBounds();
-    const icons = {
-        dollar: {
-            url: "img/dollar_marker.png",
-            scaledSize: new google.maps.Size(32, 32),
-        },
-    };
+    // const icons = {
+    //     dollar: {
+    //         url: "img/dollar_marker.png",
+    //         scaledSize: new google.maps.Size(32, 32),
+    //     },
+    // };
 
     
 
@@ -27,7 +27,7 @@ export function drawPoints(response, icon) {
 	
     for (let j = 0; j < rows.length; j++) {
         const each = rows[j];
-        createMarkerWithPopup(each, fields, latIndex, longIndex, icon, map, icons, infoWindows, markersArray, bounds);
+        createMarkerWithPopup(each, fields, latIndex, longIndex, icon, map, infoWindows, markersArray, bounds);
     }
 
     map.setCenter(bounds.getCenter());
@@ -106,65 +106,3 @@ export function drawPoints(response, icon) {
 //     }
 // }
 
-
-
-
-export function generateDataTable(response) {
-	const { fields, rows } = response;
-	// const tbody = document.getElementById('dataTableBody');
-	
-
-	if (!fields || !rows) {
-	  console.warn("Invalid table data:", response);
-	  return;
-	}
-	
-	
-	// // Destroy existing DataTable instance if it exists
-	// if ($.fn.DataTable.isDataTable('#dataTable')) {
-	//   $('#dataTable').DataTable().clear().destroy();
-	// }
-  
-	// Clear tbody manually
-	// tbody.empty();
-	const columnKeys = fields.map(col => ({ title: col }));
-	
-
-	if ($.fn.DataTable.isDataTable('#dataTable')) {
-		$('#dataTable').DataTable().clear().destroy();
-	  }
-
-	const table = document.getElementById('dataTable');
-  	table.innerHTML = '';
-	// console.log(columnKeys,rows[0]);
-	// Generate <thead> with dynamic columns
-	const thead = document.createElement('thead');
-	const headerRow = document.createElement('tr');
-	fields.forEach(col => {
-		// console.log(col);
-		const th = document.createElement('th');
-		th.textContent = col;
-		headerRow.appendChild(th);
-	});
-	thead.appendChild(headerRow);
-	table.appendChild(thead);
-	
-		
-	// $('#dataTable').dataTable().fnDestroy();
-	// $('#dataTable').empty();
-	
-	$('#dataTable').DataTable({
-		
-		destroy: true,
-		columns: columnKeys,
-		data: rows,
-		pageLength: 10,
-		lengthChange: false,
-		searching: true,
-		ordering: true,
-		scrollX: true,
-	});
-	document.getElementById('dataTableDiv').getElementsByTagName('thead')[0].style.display='';
-	
-  }
-  

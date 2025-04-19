@@ -1,12 +1,25 @@
 // query.js
 
+export let currentAbortController = null;
+export let currentRequestToken = null;
+
 export function submitQuery(filters) {
     // const filters = localStorage.getItem('filters');
     if (!filters) return;
     console.log("Filters submitted:", filters);
     // const query = JSON.parse(filters);
-    const query = filters;
-    if (query[0] === "---" || query[1] === "---") return;
+    // const query = filters;
+    // if (query[0] === "---" || query[1] === "---") return;
+    if (currentAbortController) {
+        currentAbortController.abort();
+    }
+    
+    // Create a new controller for this request
+    currentAbortController = new AbortController();
+
+    const requestToken = Symbol('query');
+    currentRequestToken = requestToken;
+
 
     return fetch('/query', {
       method: 'POST',
@@ -14,15 +27,23 @@ export function submitQuery(filters) {
         'Content-Type': 'application/json',
         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
       },
-      body: JSON.stringify({ query })
+      body: JSON.stringify(filters),
+      signal: currentAbortController.signal // attach the signal here
     })
       .then(res => res.json())
       .then(data => {
-        console.log("Query result:", data);
-        return data;
+        // console.log("Query result:", data);
+        // return data;
+        return { data, token: requestToken }; 
         // You can now call draw_points(data), updateTable(data), etc.
       })
-      .catch(err => console.error("Error in query fetch:", err));
+      .catch(err => {
+        if (err.name === 'AbortError') {
+          console.warn('Query was aborted');
+        } else {
+          console.error('Query error:', err);
+        }
+      });
   }
   
 
@@ -31,35 +52,54 @@ export function submitQuery(filters) {
 export function search(text) {
     if (!text) return;
     console.log(text);
+
+    if (currentAbortController) {
+        currentAbortController.abort();
+    }
+    
+    // Create a new controller for this request
+    currentAbortController = new AbortController();
+
+    const requestToken = Symbol('query');
+    currentRequestToken = requestToken;
+
     return fetch('/search', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
       },
-      body: JSON.stringify({ searchText: text })
+      body: JSON.stringify({ searchText: text }),
+      signal: currentAbortController.signal
     })
     .then(res => res.json())
     .then(data => {
-      console.log(data.rows.length);
+        // console.log("Query result:", data);
       // Handle response: draw_points, generateDataTable, etc.
-      return data;
+        //   return data;
+        return { data, token: requestToken }; 
     })
-    .catch(err => console.error(err));
+    .catch(err => {
+        if (err.name === 'AbortError') {
+          console.warn('Query was aborted');
+        } else {
+          console.error('Query error:', err);
+        }
+      });
   }
   
 
 
 export function checkLayer(id) {
-    console.log(document.getElementById('map'));
-    const checkBox = document.getElementById(id);
+
+    // const checkBox = document.getElementById(id);
     console.log("Checkbox ID:", id);
     const data = {
       type: "FeatureCollection",
       features: [],
     };
-  
-    if (checkBox.checked) {
+
+    // if (checkBox.checked) {
       fetch('/get-layer', {
         method: 'POST',
         headers: {
@@ -92,15 +132,24 @@ export function checkLayer(id) {
       })
       .catch(err => console.error("Layer fetch failed:", err));
   
-    } else {
-      map.data.forEach(feature => {
+  }
+
+  export function unCheckLayer(id) {
+
+    // const checkBox = document.getElementById(id);
+    console.log("Checkbox ID:", id);
+    const data = {
+      type: "FeatureCollection",
+      features: [],
+    };
+
+    map.data.forEach(feature => {
         if (feature.getId().includes(id)) {
           map.data.remove(feature);
         }
       });
-    }
+  
   }
-
 
 
   

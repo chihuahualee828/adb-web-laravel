@@ -11,12 +11,16 @@ class QueryController extends Controller
     {   
         $request->headers->set('Accept', 'application/json'); // forces JSON output
 
-        $query = $request->input('query'); // ['type', 'county', 'district', 'season']
+        // $query = $request->input('query'); // ['type', 'county', 'district', 'season']
         // if (!$query || count($query) < 4) {
         //     return response()->json(['error' => 'Invalid query parameters'], 400);
         // }
 
-        [$queryType, $county, $district, $season] = $query;
+        // [$queryType, $county, $district, $season] = $query;
+        $queryType = $request->input('query') ?? null;
+        $county    = $request->input('county') ?? null;
+        $district  = $request->input('district') ?? null;
+        $season    = $request->input('season') ?? null;
 
         // // 🔧 Build dynamic query based on input
         // $county = $request->input('county', '---');
@@ -104,74 +108,57 @@ class QueryController extends Controller
 
     private function getTopCategory($county, $district, $season)
     {
-        // $tableSuffix = '';
-        // if ($season !== 0) {
-        //     $tableSuffix = "_$season";
-        // }
-
-        // if ($district === 0) {
-        //     $category = DB::table("prodcut_category_rank_by_county{$tableSuffix}")
-        //         ->where('countyname', $county)
-        //         ->value('primary_category');
-        // } else {
-        //     $category = DB::table("prodcut_category_rank_by_district{$tableSuffix}")
-        //         ->where('countyname', $county)
-        //         ->where('townname', $district)
-        //         ->value('primary_category');
-        // }
-
-        // if (!$category) {
-        //     return response()->json(['error' => 'Category not found'], 404);
-        // }
-
-        // $query = DB::table('order_combined_pd as od')
-        //     ->join('product_list_combined as pd', 'od.product_id', '=', 'pd.product_id')
-        //     ->select('rg_id', 'rm_id', 'rs_id', 'od.product_id', 'product_name', 'primary_category', 'arrival_address_normalized', 'lat', 'long')
-        //     ->where('pd.primary_category', $category)
-        //     ->where('arrival_address_normalized', 'ILIKE', "%{$county}%");
-
-        // if ($district !== 0) {
-        //     $query->where('arrival_address_normalized', 'ILIKE', "%{$district}%");
-        // }
-
-        // return response()->json($query->get());
-        $isDistrictAll = $district == 0;
-        $isSeasonAll = $season == 0;
-
-        $tableSuffix = $isSeasonAll ? '' : "_$season";
-
-        $categoryTable = $isDistrictAll
-            ? "prodcut_category_rank_by_county{$tableSuffix}"
-            : "prodcut_category_rank_by_district{$tableSuffix}";
-
-        // Fetch top category
-        $categoryQuery = DB::table($categoryTable)->where('countyname', $county);
-        if (!$isDistrictAll) {
-            $categoryQuery->where('townname', $district);
+        $tableSuffix = '';
+        if ($season !== 0) {
+            $tableSuffix = '_' . strtolower($season);
         }
 
-        $topCategory = $categoryQuery->value('primary_category');
-
-        if (!$topCategory) {
-            return response()->json(['error' => 'Top category not found'], 404);
+        if ($district === 0) {
+            $category = DB::table("prodcut_category_rank_by_county{$tableSuffix}")
+                ->where('countyname', $county)
+                ->value('primary_category');
+        } else {
+            $category = DB::table("prodcut_category_rank_by_district{$tableSuffix}")
+                ->where('countyname', $county)
+                ->where('townname', $district)
+                ->value('primary_category');
         }
 
-        // Build main query
+        if (!$category) {
+            return response()->json(['error' => 'Category not found'], 404);
+        }
+
         $query = DB::table('order_combined_pd as od')
             ->join('product_list_combined as pd', 'od.product_id', '=', 'pd.product_id')
-            ->select(
-                'rg_id', 'rm_id', 'rs_id',
-                'od.product_id', 'product_name',
-                'primary_category', 'arrival_address_normalized', 'lat', 'long'
-            )
-            ->where('pd.primary_category', $topCategory)
+            ->select('rg_id', 'rm_id', 'rs_id', 'od.product_id', 'product_name', 'primary_category', 'arrival_address_normalized', 'lat', 'long')
+            ->where('pd.primary_category', $category)
             ->where('arrival_address_normalized', 'ILIKE', "%{$county}%");
 
-        if (!$isDistrictAll) {
+        if ($district !== 0) {
             $query->where('arrival_address_normalized', 'ILIKE', "%{$district}%");
         }
 
-        return response()->json($query->get());
+        $result = $query->get();
+
+        if ($result->isEmpty()) {
+            return response()->json([
+                'fields' => [],
+                'rows' => []
+            ]);
+        }
+
+        // Safely get field names from the first result
+        $fields = array_keys((array) $result[0]);
+
+        // Convert each row (stdClass) to indexed array
+        $rows = $result->map(function ($row) {
+            return array_values((array) $row);
+        })->toArray();
+
+        return response()->json([
+            'fields' => $fields,
+            'rows' => $rows
+        ]);
     }
 
     private function getBestLogisticsLocation($county, $district)

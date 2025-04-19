@@ -6,7 +6,7 @@
 <div class="container-fluid">
 
   {{-- Query Form --}}
-  <div class="card mb-3">
+  <div class="card shadow-sm mb-3">
     <div class="card-header fw-bold bg-primary text-white">Select your query</div>
     <div class="card-body row gx-2 gy-3 align-items-end">
       <div class="col-md-3">
@@ -70,7 +70,7 @@
   {{-- Map + Layers --}}
   <div class="row g-3 mb-3">
     <div class="col-lg-9">
-      <div class="card h-100">
+      <div class="card shadow-sm h-100">
         <div class="card-header">Map</div>
         <div class="card-body p-0 position-relative" style="height: 400px;">
           {{-- <div id="map" class="w-100 h-100"></div> --}}
@@ -81,9 +81,9 @@
       </div>
     </div>
     <div class="col-lg-3">
-      <div class="card h-100">
+      <div class="card shadow-sm h-100">
         <div class="card-header">Layers</div>
-        <div class="card-body">
+        {{-- <div class="card-body">
           <div class="form-check">
             <input class="form-check-input" type="checkbox" id="layerDistrict">
             <label class="form-check-label" for="layerDistrict">District</label>
@@ -92,10 +92,19 @@
             <input class="form-check-input" type="checkbox" id="layerCounty">
             <label class="form-check-label" for="layerCounty">County</label>
           </div>
-          <!-- 👇 NEW container for saved layers -->
+          <!-- NEW for saved layers -->
             <div id="customLayers" class="mt-3"></div>
-        </div>
-        <button id="saveLayerBtn" class="btn btn-outline-primary btn-sm">
+        </div> --}}
+
+        <div class="card-body d-flex flex-column gap-0">
+            <div class="layer-block" data-layer="county" id="layerCounty">County</div>
+            <div class="layer-block" data-layer="district" id="layerDistrict">District</div>
+            <!-- Keep this for dynamic layers -->
+            {{-- <div class="layer-block" data-layer="custom" id="customLayers"></div> --}}
+            <div id="customLayers" class="mt-3 d-none"></div>
+          </div>
+
+        <button id="saveLayerBtn" class="btn btn-outline-primary">
             <i class="bi bi-plus-circle"></i> Save Current Layer
         </button>
       </div>
@@ -103,34 +112,54 @@
   </div>
 
   {{-- Data Table --}}
-  <div id="dataTableDiv" class="card mb-3">
+  <div id="dataTableDiv" class="card shadow-sm mb-3">
     <div class="card-header fw-bold">Data Table</div>
-    <div class="card-body p-0">
-        <table id="dataTable" class="table table-sm table-hover mb-0"></table>
+    <div class="card-body px-3">
+        <div class="card-body text-center text-muted" id="dataTableWrapper">
+            <i class="bi bi-info-circle fs-4 d-block mb-2"></i>
+            <p class="mb-0">No data to display</p>
+          </div>
+        <div class="table-responsive"> 
+            {{-- <table id="dataTable" class="table table-sm table-hover mb-0 w-100"></table> --}}
+            <table id="dataTable" class="table table-sm table-hover table-striped table-bordered mb-0 w-100"></table>
+        </div>
+        
     </div>
   </div>
   
 
   {{-- Charts Section --}}
-  <div class="card mb-5">
+  <div class="card shadow-sm mb-5">
     <div class="card-header fw-bold">Breakdown Summary</div>
     <div class="card-body d-flex flex-wrap gap-3 justify-content-between">
       <div class="card flex-fill">
         <div class="card-header">County</div>
+        <div class="card-body text-center text-muted" id="countyChartWrapper">
+            <i class="bi bi-info-circle fs-4 d-block mb-2"></i>
+            <p class="mb-0">No chart to display</p>
+          </div>
         <div class="card-body">
-          <canvas id="countyChart" height="200"></canvas>
+          <canvas class="d-none" id="countyChart" height="200"></canvas>
         </div>
       </div>
       <div class="card flex-fill">
         <div class="card-header">District</div>
+        <div class="card-body text-center text-muted" id="districtChartWrapper">
+            <i class="bi bi-info-circle fs-4 d-block mb-2"></i>
+            <p class="mb-0">No chart to display</p>
+          </div>
         <div class="card-body">
-          <canvas id="districtChart" height="200"></canvas>
+          <canvas class="d-none" id="districtChart" height="200"></canvas>
         </div>
       </div>
       <div class="card flex-fill">
         <div class="card-header">Season</div>
+        <div class="card-body text-center text-muted" id="seasonChartWrapper">
+            <i class="bi bi-info-circle fs-4 d-block mb-2"></i>
+            <p class="mb-0">No chart to display</p>
+          </div>
         <div class="card-body">
-          <canvas id="seasonChart" height="200"></canvas>
+          <canvas class="d-none" id="seasonChart" height="200"></canvas>
         </div>
       </div>
     </div>
@@ -148,25 +177,25 @@
 @push('scripts')
 <script>
 
-  function dummyPie(id) {
-    const ctx = document.getElementById(id);
-    if (!ctx) return;
-    new Chart(ctx, {
-      type: 'pie',
-      data: {
-        labels: ['A', 'B', 'C'],
-        datasets: [{
-          data: [12, 19, 7],
-          backgroundColor: ['#4e73df', '#1cc88a', '#f6c23e'],
-          borderWidth: 1
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { position: 'top' } }
-      }
-    });
-  }
+//   function dummyPie(id) {
+//     const ctx = document.getElementById(id);
+//     if (!ctx) return;
+//     new Chart(ctx, {
+//       type: 'pie',
+//       data: {
+//         labels: ['A', 'B', 'C'],
+//         datasets: [{
+//           data: [12, 19, 7],
+//           backgroundColor: ['#4e73df', '#1cc88a', '#f6c23e'],
+//           borderWidth: 1
+//         }]
+//       },
+//       options: {
+//         responsive: true,
+//         plugins: { legend: { position: 'top' } }
+//       }
+//     });
+//   }
 
 
 //   document.addEventListener('DOMContentLoaded', function () {
