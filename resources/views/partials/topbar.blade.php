@@ -26,41 +26,38 @@
                 title="AI Assistant">
         <i class="bi bi-robot"></i>
         </button>
-        
         <div class="offcanvas offcanvas-end text-bg-light border-0"
-        tabindex="-1"
-        id="aiChatOffcanvas"
-        aria-labelledby="aiChatOffcanvasLabel"
-        style="width: 320px; background-color: rgba(255, 255, 255, 0.95); box-shadow: 0 0 10px rgba(0,0,0,0.1);">
-   
-        <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="aiChatOffcanvasLabel">AI Assistant</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-    
-        <div class="offcanvas-body d-flex flex-column">
-            <div id="chatMessages" class="chat-messages mb-3" style="max-height: 300px; overflow-y: auto;"></div>
+            tabindex="-1"
+            id="aiChatOffcanvas"
+            aria-labelledby="aiChatOffcanvasLabel"
+            style="width: 320px; background-color: rgba(255, 255, 255, 0.95); box-shadow: 0 0 10px rgba(0,0,0,0.1);">
 
-            <p id="chatWelcome" class="text-muted">How can I help you today?</p>
-            <!-- You can dynamically add messages here -->
-        </div>
-        
-        <div class="offcanvas-body d-flex flex-column justify-content-between">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="aiChatOffcanvasLabel">AI Assistant</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+          </div>
 
-            <div id="chatMessages" class="chat-messages mb-3" style="max-height: 60vh; overflow-y: auto;"></div>
           
-            <form id="chatForm" class="mt-3">
-              <div class="input-group input-group-lg">
-                <input type="text" class="form-control" id="chatInput" placeholder="Type your message..." />
-                <button type="submit" id="chatSendBtn" class="btn btn-primary">
-                  <i class="bi bi-send"></i>
-                </button>
+          <!-- Full body with chat box and input -->
+          <div class="offcanvas-body d-flex flex-column p-2" style="height: 100%;">
+            <div id="chat-box" class="flex-grow-1 mb-2 chat-box">
+              <div class="message">
+                <div class="ai-label">AI:</div>
+                <div class="ai-reply">How can I help you today?</div>
               </div>
+            </div>
+
+            <form id="chat-form" class="input-group input-group-sm">
+              <input type="text" id="message" class="form-control" placeholder="Type a question..." required />
+              <button type="submit" class="btn btn-primary">
+                <i class="bi bi-send"></i>
+              </button>
             </form>
-          
           </div>
         </div>
-    </div>
+      </div>
+   
+      </div>
             {{-- <div class="modal fade" id="aiChatModal" tabindex="-1" aria-labelledby="aiChatModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
                   <div class="modal-content border-0 shadow rounded-4"

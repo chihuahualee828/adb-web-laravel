@@ -165,6 +165,17 @@
     </div>
   </div>
 
+
+  <!-- Floating AI Chat Button -->
+  <button class="btn btn-primary shadow rounded-circle ai-float-btn"
+    type="button"
+    data-bs-toggle="offcanvas"
+    data-bs-target="#aiChatOffcanvas"
+    aria-controls="aiChatOffcanvas"
+    title="AI Assistant">
+    <i class="bi bi-robot fs-4"></i>
+  </button>
+
 </div>
 @endsection
 

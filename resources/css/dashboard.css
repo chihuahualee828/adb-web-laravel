@@ -61,11 +61,6 @@ body {
   }
 
 
-
-.offcanvas-narrow {
-    width: 100px; /* or whatever width you prefer */
-  }
-
   
   .main-content {
     margin-top: 56px;
@@ -145,3 +140,23 @@ z-index: 1000;
     margin-right: 0;
     text-align: left;
   }
+
+
+  .ai-float-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    z-index: 1055;
+    background-color: #0d6efd;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .ai-float-btn:hover {
+    background-color: #0b5ed7;
+  }
+  

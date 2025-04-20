@@ -1,3 +1,4 @@
+import * as Chat from './chat.js'; 
 
 
 export async function submitChatMessage(message) {
@@ -26,4 +27,36 @@ export async function submitChatMessage(message) {
     //   appendBotMessage("⚠️ Sorry, something went wrong.");
     }
   }
-  
+
+
+
+
+  document.getElementById('chat-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const input = document.getElementById('message');
+    const text = input.value.trim();
+    if (!text) return;
+    
+    Chat.appendUserMessage(text);
+    const msgId = Chat.addAssistantPlaceholder();
+    input.value = '';
+    
+    fetch('/send', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+      },
+      body: JSON.stringify({ message: text })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.tool_call) addToolCall(data.tool_call);
+      if (data.tool_result) addToolObservation(data.tool_result);
+      Chat.updateAssistantReply(msgId, data.reply || '[No response]');
+    })
+    .catch(error => {
+      console.error(error);
+      Chat.updateAssistantReply(msgId, '[Error processing request]');
+    });
+  });

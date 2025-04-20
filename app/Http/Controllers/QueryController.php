@@ -259,7 +259,9 @@ class QueryController extends Controller
                 $productQuery = clone $baseQuery;
                 $result = $productQuery->select('product_name', 'od.product_id', 'customer_id', 'rs_id', 'arrival_address_normalized', 'order_time', 'od.lat', 'od.long')
                     ->whereRaw("strpos(product_name, ?) > 0", [$searchText])
+                    ->limit(10000)
                     ->get();
+                
                     
                 if ($result->isEmpty()) {
                     // Search by customer_id
@@ -267,6 +269,7 @@ class QueryController extends Controller
                     $result = $productQuery->select('customer_id', 'rs_id', 'od.product_id', 'product_name', 'arrival_address_normalized', 'order_time', 'od.lat', 'od.long')
                         ->where('customer_id', $searchText)
                         ->get();
+                    
                 }
 
                 if ($result->isEmpty()) {
@@ -291,14 +294,16 @@ class QueryController extends Controller
                     $result = $productQuery->select('rm_id', 'rs_id', 'od.product_id', 'product_name', 'arrival_address_normalized', 'order_time', 'od.lat', 'od.long')
                         ->where('arrival_address_normalized', $searchText)
                         ->get();
+
                 }
+                // logger()->error('Search error: ' . $result);
             }
             
             // $users = result->paginate(15);
  
             // return view('user.index', ['users' => $users]);
-
-            if (empty($result)) {
+            
+            if ($result->isEmpty()) {
                 return response()->json([
                     'message' => 'No results found',
                     'data' => [],

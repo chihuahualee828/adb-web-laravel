@@ -495,37 +495,40 @@ document.getElementById("saveLayerBtn").addEventListener("click", () => {
 
 
 
-import { submitChatMessage } from './aiUtils.js';
+// import { submitChatMessage } from './aiUtils.js';
 
 
-document.addEventListener("DOMContentLoaded", function () {
-    const chatForm = document.getElementById("chatForm");
+// document.addEventListener("DOMContentLoaded", function () {
+//     const chatForm = document.getElementById("chatForm");
   
-    chatForm.addEventListener("submit", function (e) {
-    //   e.preventDefault();
-      sendChatMessage();
-    });
-  });
+//     chatForm.addEventListener("submit", function (e) {
+//     //   e.preventDefault();
+//       sendChatMessage();
+//     });
+//   });
   
-  function sendChatMessage() {
-    const input = document.getElementById("chatInput");
-    const message = input.value.trim();
+//   function sendChatMessage() {
+//     const input = document.getElementById("chatInput");
+//     const message = input.value.trim();
     
   
-    if (message) {
-      const welcome = document.getElementById("chatWelcome");
-      if (welcome) welcome.style.display = "none";
-      const chatBox = document.getElementById("chatMessages");
+//     if (message) {
+//       const welcome = document.getElementById("chatWelcome");
+//       if (welcome) welcome.style.display = "none";
+//       const chatBox = document.getElementById("chatMessages");
   
-      const bubble = document.createElement("div");
-      bubble.className = "chat-bubble user-msg";
-      bubble.textContent = message;
+//       const bubble = document.createElement("div");
+//       bubble.className = "chat-bubble user-msg";
+//       bubble.textContent = message;
   
-      chatBox.appendChild(bubble);
-      input.value = "";
-      chatBox.scrollTop = chatBox.scrollHeight;
-      submitChatMessage(message);
+//       chatBox.appendChild(bubble);
+//       input.value = "";
+//       chatBox.scrollTop = chatBox.scrollHeight;
+//       submitChatMessage(message);
 
       
-    }
-  }
+//     }
+//   }
+
+
+import './aiUtils.js'

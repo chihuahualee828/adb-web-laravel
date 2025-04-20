@@ -1,0 +1,67 @@
+.offcanvas-narrow {
+    width: 100px; /* or whatever width you prefer */
+  }
+
+  .chat-box {
+    overflow-y: auto;
+    background: #fafafa;
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 5px;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 14px;
+  }
+  
+  .message {
+    margin-bottom: 16px;
+  }
+  
+  .user-label {
+    color: #007bff;
+    font-weight: bold;
+  }
+  
+  .ai-label {
+    color: #28a745;
+    font-weight: bold;
+  }
+  
+  .user-reply,
+  .ai-reply {
+    margin-top: 4px;
+    white-space: pre-wrap;
+  }
+  
+
+
+  .tool-section {
+    background: #fff3cd;
+    border: 1px solid #ffeeba;
+    border-radius: 4px;
+    padding: 10px;
+    margin: 8px 0;
+    font-size: 14px;
+  }
+
+  .tool-section pre {
+    background: #f8f9fa;
+    padding: 8px;
+    overflow-x: auto;
+    border-radius: 4px;
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 4px solid #ccc;
+    border-top: 4px solid #555;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-top: 6px;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
