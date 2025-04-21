@@ -74,7 +74,6 @@ export function search(text) {
     })
     .then(res => res.json())
     .then(data => {
-        // console.log("Query result:", data);
       // Handle response: draw_points, generateDataTable, etc.
         //   return data;
         return { data, token: requestToken }; 

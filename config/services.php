@@ -35,6 +35,10 @@ return [
         'maps_key' => env('GOOGLE_MAPS_KEY'),
     ],
 
+    'mcp' => [
+        'url' => env('MCP_BRIDGE_URL'),
+    ],
+
 ];
 
 

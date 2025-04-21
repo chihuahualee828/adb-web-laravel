@@ -167,7 +167,7 @@
 
 
   <!-- Floating AI Chat Button -->
-  <button class="btn btn-primary shadow rounded-circle ai-float-btn"
+  <button class="btn btn-primary shadow rounded-circle ai-float-btn" id="openAiPopup2"
     type="button"
     data-bs-toggle="offcanvas"
     data-bs-target="#aiChatOffcanvas"

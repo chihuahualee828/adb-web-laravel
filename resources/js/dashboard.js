@@ -82,7 +82,7 @@ import { drawPieChart, generateDataTable } from './drawpPie.js';
                 return; // ignore stale
             }
             const data = response.data;
-            if (data && data.rows.length > 0) {
+            if (data.rows && data.rows.length > 0) {
                 drawPoints(data, "dollar");
                 generateDataTable(data);
                 

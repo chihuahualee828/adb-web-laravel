@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 // use OpenAI\Laravel\Facades\OpenAI;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class ChatController extends Controller
 {
@@ -21,13 +22,49 @@ class ChatController extends Controller
     //     return view('chat');
     // }
 
+    // public function getJsonData(Request $request)
+    // {
+    //     // Only load the schema and put in session once
+    //     if (!$request->session()->has('schema')) {
+    //         $path = 'db_schema.json';
+
+    //         if (Storage::exists($path)) {
+    //             $jsonContent = Storage::get($path);
+    //             $data = json_decode($jsonContent, true); // decode as associative array
+    //             return response()->json($data);
+    //         }
+
+    //         return response()->json(['error' => 'File not found.'], 404);
+    //     }
+
+    // }
+
     public function send(Request $request)
-    {
+    {   
+        if (!$request->session()->has('schema')) {
+            $path = 'db_schema.json';
+    
+            if (Storage::exists($path)) {
+                $jsonContent = Storage::get($path);
+                $schema = json_decode($jsonContent, true); // associative array
+                $request->session()->put('schema', $schema);
+            } else {
+                return response()->json(['error' => 'Schema file not found.'], 404);
+            }
+        }
+
+        $schema = $request->session()->get('schema', []);
+        $schemaJson = json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+
         // Retrieve the existing conversation history from the session, or initialize it with a system prompt
         $messages = $request->session()->get('messages', [
             [
                 'role' => 'system',
                 'content' => 'You are a helpful assistant at querying postgres database.',
+            ],
+            [
+                'role' => 'user',
+                'content' => "Given the following database tables:\n\n$schemaJson",
             ],
         ]);
 
@@ -46,7 +83,8 @@ class ChatController extends Controller
         // Log::info('User message:', ['content' => $messages]);
 
         // Send the request to the MCP-Bridge server
-        $response = Http::post('http://172.21.192.1:9090/v1/chat/completions', $payload);
+        $url = env('MCP_BRIDGE_URL');
+        $response = Http::post($url . '/v1/chat/completions', $payload);
 
         // Decode the JSON response
         $result = $response->json();
@@ -78,3 +116,5 @@ class ChatController extends Controller
     //     return redirect()->route('chat.index');
     // }
 }
+
+

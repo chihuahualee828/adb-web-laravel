@@ -19,18 +19,23 @@
               <i class="bi bi-search"></i>
             </button>
           </div>
-          <button class="btn btn-outline-primary btn-sm" type="button"
+          {{-- <button class="btn btn-outline-primary btn-sm" type="button"
                 data-bs-toggle="offcanvas"
                 data-bs-target="#aiChatOffcanvas"
                 aria-controls="aiChatOffcanvas"
                 title="AI Assistant">
         <i class="bi bi-robot"></i>
-        </button>
-        <div class="offcanvas offcanvas-end text-bg-light border-0"
+        </button> --}}
+        <button class="btn btn-outline-primary btn-sm" type="button"
+              id="openAiPopup"
+              title="AI Assistant">
+        <i class="bi bi-robot"></i>
+      </button>
+        {{-- <div class="offcanvas offcanvas-end text-bg-light border-0"
             tabindex="-1"
             id="aiChatOffcanvas"
             aria-labelledby="aiChatOffcanvasLabel"
-            style="width: 320px; background-color: rgba(255, 255, 255, 0.95); box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+            style="width:350px; background-color: rgba(255, 255, 255, 0.95); box-shadow: 0 0 10px rgba(0,0,0,0.1);">
 
           <div class="offcanvas-header">
             <h5 class="offcanvas-title" id="aiChatOffcanvasLabel">AI Assistant</h5>
@@ -47,6 +52,28 @@
               </div>
             </div>
 
+            <form id="chat-form" class="input-group input-group-sm">
+              <input type="text" id="message" class="form-control" placeholder="Type a question..." required />
+              <button type="submit" class="btn btn-primary">
+                <i class="bi bi-send"></i>
+              </button>
+            </form>
+          </div>
+        </div> --}}
+        <div class="ai-popup shadow-lg rounded-3" id="aiChatPopup" style="display: none;">
+          <div class="popup-header d-flex justify-content-between align-items-center p-2 border-bottom cursor-move" id="popupDragHandle">
+            <h5 class="popup-title mb-0">🤖 AI Assistant</h5>
+            <button type="button" class="btn-close" id="closeAiPopup" aria-label="Close"></button>
+          </div>
+        
+          <div class="popup-body d-flex flex-column p-2" style="height: 100%;">
+            <div id="chat-box" class="flex-grow-1 mb-2 chat-box">
+              <div class="message">
+                <div class="ai-label">AI:</div>
+                <div class="ai-reply">How can I help you today?</div>
+              </div>
+            </div>
+        
             <form id="chat-form" class="input-group input-group-sm">
               <input type="text" id="message" class="form-control" placeholder="Type a question..." required />
               <button type="submit" class="btn btn-primary">

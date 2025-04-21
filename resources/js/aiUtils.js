@@ -1,32 +1,32 @@
 import * as Chat from './chat.js'; 
 
 
-export async function submitChatMessage(message) {
+// export async function submitChatMessage(message) {
   
-    // const input = document.getElementById("chatInput");
-    // const message = input.value.trim();
-    if (!message) return;
-    console.log("Message:", message);
-    // appendUserMessage(message); // show user message on screen
+//     // const input = document.getElementById("chatInput");
+//     // const message = input.value.trim();
+//     if (!message) return;
+//     console.log("Message:", message);
+//     // appendUserMessage(message); // show user message on screen
   
-    try {
-      const res = await fetch('/api/ai-chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-        },
-        body: JSON.stringify({ message })
-      });
+//     try {
+//       const res = await fetch('/api/ai-chat', {
+//         method: 'POST',
+//         headers: {
+//           'Content-Type': 'application/json',
+//           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+//         },
+//         body: JSON.stringify({ message })
+//       });
   
-      const data = await res.json();
-    //   appendBotMessage(data.response); // display AI's reply
-      input.value = "";
-    } catch (err) {
-      console.error("Error talking to LLM:", err);
-    //   appendBotMessage("⚠️ Sorry, something went wrong.");
-    }
-  }
+//       const data = await res.json();
+//     //   appendBotMessage(data.response); // display AI's reply
+//       input.value = "";
+//     } catch (err) {
+//       console.error("Error talking to LLM:", err);
+//     //   appendBotMessage("⚠️ Sorry, something went wrong.");
+//     }
+//   }
 
 
 
@@ -51,8 +51,11 @@ export async function submitChatMessage(message) {
     })
     .then(res => res.json())
     .then(data => {
-      if (data.tool_call) addToolCall(data.tool_call);
-      if (data.tool_result) addToolObservation(data.tool_result);
+      console.log("Response data:", data);
+      if (data.tool_call) Chat.addToolCall(data.tool_call);
+      console.log("Tool call:", data.tool_call);
+      if (data.tool_result) Chat.addToolObservation(data.tool_result);
+      console.log("Tool tool_result:", data.tool_result);
       Chat.updateAssistantReply(msgId, data.reply || '[No response]');
     })
     .catch(error => {

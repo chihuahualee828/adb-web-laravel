@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 
 Route::get('/', function (Request $request) {
     $request->session()->forget('messages');
+    $request->session()->forget('schema'); 
     return view('index');
 })->name('dashboard.index');
 
