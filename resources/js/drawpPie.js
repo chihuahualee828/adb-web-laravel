@@ -1,4 +1,17 @@
-import { currentAbortController } from './query.js';
+// Remove the import as we will manage controllers locally
+// import { currentAbortController } from './query.js'; 
+
+const chartAbortControllers = {};
+
+export function abortAllCharts() {
+    Object.keys(chartAbortControllers).forEach(key => {
+        if (chartAbortControllers[key]) {
+            console.log(`%c[Abort] Aborting chart request: ${key}`, "color: orange; font-weight: bold;");
+            chartAbortControllers[key].abort();
+        }
+        delete chartAbortControllers[key];
+    });
+}
 
 export function drawPieChart({ searchText, searchBy, groupBy, county = null }) {
     const canvasId =
@@ -6,18 +19,36 @@ export function drawPieChart({ searchText, searchBy, groupBy, county = null }) {
       groupBy === "district" ? "districtChart" :
       "countyChart";
     
-    if (currentAbortController) {
-        currentAbortController.abort();
+    // Abort previous request for this specific chart if it exists
+    if (chartAbortControllers[canvasId]) {
+        chartAbortControllers[canvasId].abort();
     }
     
-    // Create a new controller for this request
-    currentAbortController = new AbortController();
+    // Create a new controller for this request and store it
+    const controller = new AbortController();
+    chartAbortControllers[canvasId] = controller;
 
 
     const canvas = document.getElementById(canvasId);
-    const wrapper = document.getElementById(canvasId + "Wrapper");
     if (!canvas) return console.warn(`Canvas with id "${canvasId}" not found.`);
+    const canvasContainer = canvas.parentElement;
+    const wrapper = document.getElementById(canvasId + "Wrapper");
+    
   
+    // Show loading state
+    wrapper.classList.remove('d-none'); // Ensure wrapper is visible
+    canvasContainer.classList.add('d-none');     // Hide canvas container
+    
+    // Set loading spinner HTML inside the wrapper
+    wrapper.innerHTML = `
+        <div class="d-flex flex-column align-items-center justify-content-center h-100 p-4">
+            <div class="spinner-border text-primary mb-2" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="text-muted small mb-0">Loading data...</p>
+        </div>
+    `;
+
     // Destroy existing chart if present
     const existingChart = Chart.getChart(canvas);
     if (existingChart) existingChart.destroy();
@@ -34,44 +65,114 @@ export function drawPieChart({ searchText, searchBy, groupBy, county = null }) {
         groupBy,
         county
       }),
-      signal: currentAbortController.signal
+      signal: controller.signal
     })
       .then(res => res.json())
       .then(({ fields, rows }) => {
         // console.log(rows);
-        if (!rows || rows.length === 0) return;
+        
+        // Handle "No data" case
+        if (!rows || rows.length === 0) {
+            console.log("Chart data: No data for", groupBy);
+            canvasContainer.classList.add('d-none');
+            wrapper.classList.remove('d-none');
+            wrapper.innerHTML = `
+                <div class="d-flex flex-column align-items-center justify-content-center h-100 p-4">
+                    <i class="bi bi-info-circle fs-4 d-block mb-2"></i>
+                    <p class="mb-0">No chart to display</p>
+                </div>
+            `;
+            return; 
+        }
+
+        // We have data, so hide wrapper and show canvas container
+        wrapper.classList.add('d-none');
+        canvasContainer.classList.remove('d-none');
+
         console.log("Chart data:", groupBy);
-        const labels = rows.map(r => r[0]);
-        const values = rows.map(r => r[1]);
-        const colors = labels.map((_, i) =>
-          `hsl(${(i * 360) / labels.length}, 70%, 60%)`
-        );
+
+        // Sort data by value (descending) for better presentation
+        // Assuming rows are [label, value]
+        rows.sort((a, b) => b[1] - a[1]);
+
+        // Limit to top N slices + "Others"
+        const MAX_SLICES = 10;
+        let displayRows = rows;
+        if (rows.length > MAX_SLICES) {
+            const topRows = rows.slice(0, MAX_SLICES);
+            const otherRows = rows.slice(MAX_SLICES);
+            const otherSum = otherRows.reduce((sum, r) => sum + r[1], 0);
+            topRows.push(["Others", otherSum]);
+            displayRows = topRows;
+        }
+
+        const labels = displayRows.map(r => r[0]);
+        const values = displayRows.map(r => r[1]);
+
+        // Modern, professional color palette
+        const palette = [
+            'rgba(54, 162, 235, 0.8)',   // Blue
+            'rgba(255, 99, 132, 0.8)',   // Red
+            'rgba(255, 206, 86, 0.8)',   // Yellow
+            'rgba(75, 192, 192, 0.8)',   // Teal
+            'rgba(153, 102, 255, 0.8)',  // Purple
+            'rgba(255, 159, 64, 0.8)',   // Orange
+            'rgba(199, 199, 199, 0.8)',  // Grey
+            'rgba(83, 102, 255, 0.8)',   // Indigo
+            'rgba(40, 167, 69, 0.8)',    // Green
+            'rgba(220, 53, 69, 0.8)'     // Dark Red
+        ];
+        
+        // Assign colors cyclically
+        const colors = labels.map((_, i) => palette[i % palette.length]);
+        const borders = colors.map(c => c.replace('0.8)', '1)')); // Solid border
+
   
         new Chart(canvas, {
-          type: "pie",
+          type: "doughnut", // Doughnut looks cleaner than pie
           data: {
             labels,
             datasets: [{
               data: values,
               backgroundColor: colors,
-              borderColor: "#fff",
-              borderWidth: 1
+              borderColor: borders,
+              borderWidth: 1,
+              hoverOffset: 4
             }]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
+            cutout: '60%', // Makes the doughnut thinner
+            animation: {
+                duration: 800,
+                easing: 'easeOutQuart'
+            },
             plugins: {
               legend: {
-                position: "bottom"
+                position: "right",
+                labels: {
+                    usePointStyle: true,
+                    boxWidth: 10,
+                    font: {
+                        size: 11
+                    }
+                }
               },
               tooltip: {
-                padding: 10,
-                backgroundColor: "#fff",
-                borderColor: "#ccc",
-                borderWidth: 1,
-                titleColor: "#000",
-                bodyColor: "#333"
+                backgroundColor: "rgba(0,0,0,0.8)",
+                padding: 12,
+                cornerRadius: 8,
+                titleFont: { weight: 'bold' },
+                callbacks: {
+                    label: function(context) {
+                        const label = context.label || '';
+                        const val = context.parsed;
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const percentage = ((val / total) * 100).toFixed(1) + '%';
+                        return `${label}: ${val} (${percentage})`;
+                    }
+                }
               }
             }
           }
@@ -79,14 +180,34 @@ export function drawPieChart({ searchText, searchBy, groupBy, county = null }) {
 
         if (rows.length === 0) {
             wrapper.classList.remove('d-none');
-            canvas.classList.add('d-none');
+            canvasContainer.classList.add('d-none');
+            wrapper.innerHTML = `
+                <div class="d-flex flex-column align-items-center justify-content-center h-100 p-4">
+                    <i class="bi bi-info-circle fs-4 d-block mb-2"></i>
+                    <p class="mb-0">No chart to display</p>
+                </div>
+            `;
         } else {
             wrapper.classList.add('d-none');
-            canvas.classList.remove('d-none');
+            canvasContainer.classList.remove('d-none');
         }
       })
-      .catch(err => console.error("Chart error:", err));
-
+      .catch(err => {
+          if (err.name === 'AbortError') {
+              console.log(`%c[Abort] Fetch aborted for ${canvasId}`, "color: orange; font-style: italic;");
+              return; 
+          }
+          console.error("Chart error:", err);
+          // Show error state
+            canvasContainer.classList.add('d-none');
+            wrapper.classList.remove('d-none');
+            wrapper.innerHTML = `
+                <div class="d-flex flex-column align-items-center justify-content-center h-100 text-danger p-4">
+                    <i class="bi bi-exclamation-triangle fs-4 d-block mb-2"></i>
+                    <p class="mb-0">Error loading data</p>
+                </div>
+            `;
+      });
   }
   
 let dataTableInstance;

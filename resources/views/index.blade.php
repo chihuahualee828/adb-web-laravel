@@ -7,7 +7,7 @@
 
   {{-- Query Form --}}
   <div class="card shadow-sm mb-3">
-    <div class="card-header fw-bold bg-primary text-white">Select your query</div>
+    <div class="card-header fw-bold">Select your query</div>
     <div class="card-body row gx-2 gy-3 align-items-end">
       <div class="col-md-3">
         <label for="query" class="form-label">Query</label>
@@ -131,35 +131,57 @@
   {{-- Charts Section --}}
   <div class="card shadow-sm mb-5">
     <div class="card-header fw-bold">Breakdown Summary</div>
-    <div class="card-body d-flex flex-wrap gap-3 justify-content-between">
-      <div class="card flex-fill">
-        <div class="card-header">County</div>
-        <div class="card-body text-center text-muted" id="countyChartWrapper">
-            <i class="bi bi-info-circle fs-4 d-block mb-2"></i>
-            <p class="mb-0">No chart to display</p>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <div class="card h-100">
+            <div class="card-header">County</div>
+            <div class="card-body p-0">
+                <div class="d-flex align-items-center justify-content-center text-muted" id="countyChartWrapper" style="min-height: 200px;">
+                    <div class="text-center p-4">
+                        <i class="bi bi-info-circle fs-4 d-block mb-2"></i>
+                        <p class="mb-0">No chart to display</p>
+                    </div>
+                </div>
+                <div class="position-relative d-none" style="height: 300px; padding: 10px;">
+                  <canvas class="w-100 h-100" id="countyChart"></canvas>
+                </div>
+            </div>
           </div>
-        <div class="card-body">
-          <canvas class="d-none" id="countyChart" height="200"></canvas>
         </div>
-      </div>
-      <div class="card flex-fill">
-        <div class="card-header">District</div>
-        <div class="card-body text-center text-muted" id="districtChartWrapper">
-            <i class="bi bi-info-circle fs-4 d-block mb-2"></i>
-            <p class="mb-0">No chart to display</p>
+
+        <div class="col-md-4">
+          <div class="card h-100">
+            <div class="card-header">District</div>
+            <div class="card-body p-0">
+                <div class="d-flex align-items-center justify-content-center text-muted" id="districtChartWrapper" style="min-height: 200px;">
+                    <div class="text-center p-4">
+                        <i class="bi bi-info-circle fs-4 d-block mb-2"></i>
+                        <p class="mb-0">No chart to display</p>
+                    </div>
+                </div>
+                <div class="position-relative d-none" style="height: 300px; padding: 10px;">
+                  <canvas class="w-100 h-100" id="districtChart"></canvas>
+                </div>
+            </div>
           </div>
-        <div class="card-body">
-          <canvas class="d-none" id="districtChart" height="200"></canvas>
         </div>
-      </div>
-      <div class="card flex-fill">
-        <div class="card-header">Season</div>
-        <div class="card-body text-center text-muted" id="seasonChartWrapper">
-            <i class="bi bi-info-circle fs-4 d-block mb-2"></i>
-            <p class="mb-0">No chart to display</p>
+
+        <div class="col-md-4">
+          <div class="card h-100">
+            <div class="card-header">Season</div>
+            <div class="card-body p-0">
+                <div class="d-flex align-items-center justify-content-center text-muted" id="seasonChartWrapper" style="min-height: 200px;">
+                    <div class="text-center p-4">
+                        <i class="bi bi-info-circle fs-4 d-block mb-2"></i>
+                        <p class="mb-0">No chart to display</p>
+                    </div>
+                </div>
+                <div class="position-relative d-none" style="height: 300px; padding: 10px;">
+                  <canvas class="w-100 h-100" id="seasonChart"></canvas>
+                </div>
+            </div>
           </div>
-        <div class="card-body">
-          <canvas class="d-none" id="seasonChart" height="200"></canvas>
         </div>
       </div>
     </div>
@@ -187,6 +209,17 @@
 
 @push('scripts')
 <script>
+  // Modern Chart.js defaults
+  document.addEventListener('DOMContentLoaded', function () {
+    if (typeof Chart !== 'undefined' && Chart.defaults) {
+        Chart.defaults.font.family = "'Inter', system-ui, -apple-system, sans-serif";
+        Chart.defaults.color = '#64748b';
+        Chart.defaults.scale.grid.color = '#f1f5f9';
+        Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+        Chart.defaults.plugins.tooltip.padding = 10;
+        Chart.defaults.plugins.tooltip.cornerRadius = 8;
+    }
+  });
 
 //   function dummyPie(id) {
 //     const ctx = document.getElementById(id);
