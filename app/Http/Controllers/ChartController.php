@@ -8,8 +8,11 @@ use Illuminate\Support\Facades\DB;
 class ChartController extends Controller {
 
     public function getPieChartData(Request $request) {
+        // Close the session immediately to prevent blocking concurrent requests
+        session_write_close();
+        
         $searchText = $request->input('searchText');
-        $searchBy   = $request->input('searchhBy');
+        $searchBy   = $request->input('searchBy');
         $groupBy    = $request->input('groupBy');
         $county     = $request->input('county');
 
@@ -59,7 +62,7 @@ class ChartController extends Controller {
                 ->groupBy("geo.$labelField");
         }
 
-        $results = $query->get();
+        $results = $query->limit(10000)->get();
 
         if ($results->isEmpty()) {
             return response()->json(['fields' => [], 'rows' => []]);

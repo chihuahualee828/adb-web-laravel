@@ -1,9 +1,9 @@
 {{-- Sidebar Component --}}
 
 <!-- Desktop Sidebar (visible on lg and up) -->
-<div class="sidebar d-none d-lg-block vh-100 p-3" style="width: 220px;">
-    <div class="px-4 py-2">
-        <strong class="fs-4">ADB-Web</strong>
+<div class="sidebar d-none d-lg-block vh-100 p-0">
+    <div class="px-4 py-4 mb-2">
+        <strong class="fs-4 brand-text">ADB-Web</strong>
       </div>
     <nav class="nav flex-column sidebar-nav">
       <a href="#" class="nav-link"><i class="bi bi-geo-alt-fill me-2"></i> Spatial</a>

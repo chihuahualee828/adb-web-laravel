@@ -1,52 +1,157 @@
 
 #map {
     height: 400px;
-    }
-    
-.map-popup {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    padding: 12px 16px;
-    background-color: rgba(255, 255, 255, 0.95);
-    border-radius: 12px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* --- Google Maps InfoWindow Overrides for Glassmorphism --- */
+
+/* The main container background */
+.gm-style-iw-c {
+    background-color: rgba(255, 255, 255, 0.85) !important; /* Semi-transparent white */
+    backdrop-filter: blur(8px) saturate(180%); /* Glass effect */
+    -webkit-backdrop-filter: blur(8px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15) !important; /* Softer, deeper shadow */
+    border-radius: 16px !important;
+    padding: 0 !important; /* Remove default padding to control it internally */
+}
+
+/* The little triangle pointer (caret) styling */
+.gm-style-iw-tc::after { 
+    background-color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* The close button (X) */
+/* Header row for the close button */
+.gm-style-iw-chr {
+    height: 10px !important;
+    max-height: 10px !important;
+    overflow: visible !important; 
+    /* The close button is inside this, but absolute positioned usually, 
+       so setting height 0 might hide it if overflow is hidden. 
+       Let's try 0 and overflow visible. */
+}
+.gm-ui-hover-effect {
+    background-color: rgba(0,0,0,0.05) !important;
+    border-radius: 50%;
+    /* Adjust position since container is 0 height */
+    top: 2px !important;
+    right: 2px !important;
+    width: 24px !important;  /* Adjusted size */
+    height: 24px !important; /* Adjusted size */
+    min-width: 24px !important; /* Ensure it doesn't shrink */
+    min-height: 24px !important;
+    margin: 4px !important; /* spacing */
+    z-index: 1000 !important; /* Ensure it's on top */
+    opacity: 0.7;
+}
+
+.gm-ui-hover-effect > span {
+    background-color: #555 !important; /* Darker X color */
+    margin: 5px !important; /* adjust margin to center the icon */
+    width: 14px !important; /* smaller icon */
+    height: 14px !important;
+}
+.gm-ui-hover-effect:hover {
+    background-color: rgba(220, 53, 69, 0.1) !important; /* Red tint on hover */
+    opacity: 1 !important;
+}
+
+
+.modern-map-popup {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    min-width: 320px;
+    max-width: 450px;
+    color: #1f2937;
+    margin: 0px 0 6px 16px; /* Adjust for close button space */
+    padding-right: 24px; /* Space for X button */
+}
+
+.modern-map-popup h6.popup-title {
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #111827; /* Darker text */
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    display: block;
+    letter-spacing: -0.01em;
+}
+
+.modern-map-popup .popup-row {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 10px;
     font-size: 0.875rem;
-    z-index: 1000;
-    pointer-events: none;
-    transition: opacity 0.2s ease-in-out;
-    }
+}
 
-.map-popup-btn {
+.modern-map-popup .popup-row:last-child {
+    margin-bottom: 0;
+}
+
+.modern-map-popup .popup-label {
+    text-transform: uppercase;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #6b7280; /* Gray-500 */
+    margin-bottom: 2px;
+    letter-spacing: 0.04em;
+}
+
+.modern-map-popup .popup-value {
+    font-weight: 500;
+    line-height: 1.4;
+    color: #374151; /* Gray-700 */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    word-break: break-word; /* Prevent overflow */
+}
+
+/* Specific styling for the action button inside value */
+.modern-map-popup .popup-btn-container {
+    margin-left: 10px;
+}
+
+.modern-map-popup .map-popup-btn {
+    padding: 3px 12px;
+    border-radius: 20px; /* Pill shape */
     font-size: 0.75rem;
-    padding: 4px 8px;
-    border-radius: 6px;
-
-}
-    
-.map-popup-btn:hover {
-    background-color: #157347;
-}
-
-
-.map-popup .popup-search-btn {
-    background-color: #3b82f6; /* blue-500 */
-    color: white;
-    border: none;
-    padding: 6px 16px;
-    font-size: 0.8rem;
-    border-radius: 6px;
+    font-weight: 600;
+    white-space: nowrap; /* Prevent text wrapping */
+    flex-shrink: 0;      /* Prevent button from shrinking */
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(59, 130, 246, 0.3); /* Subtle blue border */
+    background: rgba(59, 130, 246, 0.05); /* Very light blue bg */
+    color: #2563eb; /* Blue-600 */
     cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    margin-top: 8px;
-    transition: background-color 0.2s ease, transform 0.1s ease;
-    }
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
 
-.map-popup .popup-search-btn:hover {
-    background-color: #2563eb; /* blue-600 */
-    }
+.modern-map-popup .map-popup-btn:hover {
+    background-color: #2563eb;
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+    border-color: #2563eb;
+    text-decoration: none;
+}
 
-.map-popup .popup-search-btn:active {
-    transform: scale(0.97);
-    background-color: #1d4ed8; /* blue-700 */
-    }
+.modern-map-popup .map-popup-btn i {
+    font-size: 0.75rem;
+}
+
+/* Custom scrollbar for content if it gets too long */
+.gm-style-iw-d {
+    overflow: auto !important;
+    padding-bottom: 10px !important;
+}
+.gm-style-iw-d::-webkit-scrollbar {
+    width: 4px;
+}
+.gm-style-iw-d::-webkit-scrollbar-thumb {
+    background-color: rgba(0,0,0,0.15);
+    border-radius: 4px;
+}

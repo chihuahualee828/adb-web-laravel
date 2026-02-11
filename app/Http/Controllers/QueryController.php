@@ -9,6 +9,9 @@ class QueryController extends Controller
 {   
     public function submit(Request $request)
     {   
+        // Close session immediately to avoid blocking concurrent requests with session lock
+        session_write_close();
+
         $request->headers->set('Accept', 'application/json'); // forces JSON output
 
         // $query = $request->input('query'); // ['type', 'county', 'district', 'season']
@@ -220,103 +223,114 @@ class QueryController extends Controller
     
     public function search(Request $request)
     {
+        // Close session immediately to avoid blocking concurrent requests with session lock
+        session_write_close();
+
         $searchText = $request->input('searchText');
+        $perPage = $request->input('perPage', 2000);
 
         try{
             // Initial query builder base
             $baseQuery = DB::table('order_combined_pd as od')
                 ->join('product_list_combined as pd', 'od.product_id', '=', 'pd.product_id');
 
-            $result = [];
+            $paginator = null;
 
             if (is_numeric($searchText)) {
-                $productQuery = clone $baseQuery;
+                
                 // Search by product_id
-                $result = $productQuery->select('od.product_id', 'product_name', 'rs_id', 'arrival_address_normalized', 'order_time', 'od.lat', 'od.long')
-                    ->where('od.product_id', $searchText)
-                    ->get();
+                $query = (clone $baseQuery)->select('od.product_id', 'product_name', 'rm_id', 'rs_id', 'arrival_address_normalized', 'order_time', 'od.lat', 'od.long')
+                    ->where('od.product_id', $searchText);
+                $p = $query->paginate($perPage);
+                if ($p->isNotEmpty()) $paginator = $p;
 
-                if ($result->isEmpty()) {
-                    $productQuery = clone $baseQuery;
+                if (!$paginator) {
+                    
                     // Search by primary_category
-                    $result = $productQuery->select('primary_category', 'od.product_id', 'product_name', 'rs_id', 'arrival_address_normalized', 'order_time', 'od.lat', 'od.long')
-                        ->where('primary_category', $searchText)
-                        ->get();
+                    $query = (clone $baseQuery)->select('primary_category', 'od.product_id', 'product_name', 'rm_id', 'rs_id', 'arrival_address_normalized', 'order_time', 'od.lat', 'od.long')
+                        ->where('primary_category', $searchText);
+                    $p = $query->paginate($perPage);
+                    if ($p->isNotEmpty()) $paginator = $p;
                 }
 
-                if ($result->isEmpty()) {
-                    $productQuery = clone $baseQuery;
+                if (!$paginator) {
+                    
                     // Search by rg_id
-                    $result = $productQuery->select('rg_id', 'rs_id', 'od.product_id', 'product_name', 'arrival_address_normalized', 'order_time', 'od.lat', 'od.long')
-                        ->where('od.rg_id', $searchText)
-                        ->get();
+                    $query = (clone $baseQuery)->select('rg_id', 'rs_id', 'od.product_id', 'product_name', 'arrival_address_normalized', 'order_time', 'od.lat', 'od.long')
+                        ->where('od.rg_id', $searchText);
+                    $p = $query->paginate($perPage);
+                    if ($p->isNotEmpty()) $paginator = $p;
                 }
             } else {
+                
                 // Search by product_name using strpos equivalent
-                // $results = $baseQuery->select('product_name', 'od.product_id', 'customer_id', 'rs_id', 'arrival_address_normalized', 'order_time', 'od.lat', 'od.long')
-                //     ->where('product_name', 'ILIKE', '%' . $searchText . '%')
-                //     ->get();
-                $productQuery = clone $baseQuery;
-                $result = $productQuery->select('product_name', 'od.product_id', 'customer_id', 'rs_id', 'arrival_address_normalized', 'order_time', 'od.lat', 'od.long')
-                    ->whereRaw("strpos(product_name, ?) > 0", [$searchText])
-                    ->limit(10000)
-                    ->get();
+                $query = (clone $baseQuery)->select('product_name', 'od.product_id', 'customer_id', 'rm_id',  'rs_id', 'arrival_address_normalized', 'order_time', 'od.lat', 'od.long')
+                    ->whereRaw("strpos(product_name, ?) > 0", [$searchText]);
+                
+                $p = $query->paginate($perPage);
+                if ($p->isNotEmpty()) $paginator = $p;
                 
                     
-                if ($result->isEmpty()) {
+                if (!$paginator) {
                     // Search by customer_id
-                    $productQuery = clone $baseQuery;
-                    $result = $productQuery->select('customer_id', 'rs_id', 'od.product_id', 'product_name', 'arrival_address_normalized', 'order_time', 'od.lat', 'od.long')
-                        ->where('customer_id', $searchText)
-                        ->get();
+                    $query = (clone $baseQuery)->select('customer_id', 'rs_id', 'od.product_id', 'product_name', 'arrival_address_normalized', 'order_time', 'od.lat', 'od.long')
+                        ->where('customer_id', $searchText);
+                    $p = $query->paginate($perPage);
+                    if ($p->isNotEmpty()) $paginator = $p;
+                }
+
+                if (!$paginator) {
                     
-                }
-
-                if ($result->isEmpty()) {
-                    $productQuery = clone $baseQuery;
                     // Search by rs_id
-                    $result = $productQuery->select('rs_id', 'od.product_id', 'product_name', 'arrival_address_normalized', 'order_time', 'od.lat', 'od.long')
-                        ->where('od.rs_id', $searchText)
-                        ->get();
+                    $query = (clone $baseQuery)->select('rs_id', 'od.product_id', 'product_name', 'arrival_address_normalized', 'order_time', 'od.lat', 'od.long')
+                        ->where('od.rs_id', $searchText);
+                    $p = $query->paginate($perPage);
+                    if ($p->isNotEmpty()) $paginator = $p;
                 }
 
-                if ($result->isEmpty()) {
-                    $productQuery = clone $baseQuery;
+                if (!$paginator) {
+                 
                     // Search by rm_id
-                    $result = $productQuery->select('rm_id', 'rs_id', 'od.product_id', 'product_name', 'arrival_address_normalized', 'order_time', 'od.lat', 'od.long')
-                        ->where('od.rm_id', $searchText)
-                        ->get();
+                    $query = (clone $baseQuery)->select('rm_id', 'rs_id', 'od.product_id', 'product_name', 'arrival_address_normalized', 'order_time', 'od.lat', 'od.long')
+                        ->where('od.rm_id', $searchText);
+                    $p = $query->paginate($perPage);
+                    if ($p->isNotEmpty()) $paginator = $p;
                 }
 
-                if ($result->isEmpty()) {
-                    $productQuery = clone $baseQuery;
+                if (!$paginator) {
+                    
                     // Search by address
-                    $result = $productQuery->select('rm_id', 'rs_id', 'od.product_id', 'product_name', 'arrival_address_normalized', 'order_time', 'od.lat', 'od.long')
-                        ->where('arrival_address_normalized', $searchText)
-                        ->get();
-
+                    $query = (clone $baseQuery)->select('rm_id', 'rs_id', 'od.product_id', 'product_name', 'arrival_address_normalized', 'order_time', 'od.lat', 'od.long')
+                        ->where('arrival_address_normalized', $searchText);
+                    $p = $query->paginate($perPage);
+                    if ($p->isNotEmpty()) $paginator = $p;
                 }
-                // logger()->error('Search error: ' . $result);
             }
             
-            // $users = result->paginate(15);
- 
-            // return view('user.index', ['users' => $users]);
-            
-            if ($result->isEmpty()) {
+            if (!$paginator) {
                 return response()->json([
                     'message' => 'No results found',
                     'data' => [],
+                    'fields' => [],
+                    'rows' => []
                 ], 200);
             }
         
-            $fields = array_keys((array)$result[0]);
-            $rows = array_map(fn($r) => array_values((array)$r), $result->toArray());
+            $items = $paginator->items();
+            $fields = array_keys((array)$items[0]);
+            $rows = array_map(fn($r) => array_values((array)$r), $items);
         
             return response()->json([
                 'fields' => $fields,
-                'rows' => $rows
+                'rows' => $rows,
+                'pagination' => [
+                    'total' => $paginator->total(),
+                    'per_page' => $paginator->perPage(),
+                    'current_page' => $paginator->currentPage(),
+                    'last_page' => $paginator->lastPage(),
+                ]
             ], 200);
+
         } catch (\Exception $e) {
             logger()->error('Search error: ' . $e->getMessage());
         

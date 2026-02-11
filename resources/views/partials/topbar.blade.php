@@ -18,6 +18,9 @@
             <button id="searchBtn" class="btn btn-outline-secondary" type="button">
               <i class="bi bi-search"></i>
             </button>
+            <button id="currentLocBtn" class="btn btn-outline-secondary" type="button" title="Current Location">
+              <i class="bi bi-geo-alt"></i>
+            </button>
           </div>
           {{-- <button class="btn btn-outline-primary btn-sm" type="button"
                 data-bs-toggle="offcanvas"

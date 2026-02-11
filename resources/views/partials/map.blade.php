@@ -19,45 +19,9 @@ function initMap() {
 
     window.map = new google.maps.Map(document.getElementById("map"), options);
 
-    const icons = {
-        google: {
-            url: "/img/icons8-leaving-geo-fence-80.png",
-            scaledSize: new google.maps.Size(50, 50)
-        }
-    };
-
-    const infoWindow = new google.maps.InfoWindow();
-
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const pos = {
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude
-                };
-
-                const marker = new google.maps.Marker({
-                    position: pos,
-                    icon: icons.google,
-                    map: map
-                });
-
-                marker.addListener("click", () => {
-                    infoWindow.setContent("You're here");
-                    infoWindow.open({
-                        anchor: marker,
-                        map
-                    });
-                });
-
-                map.setCenter(pos);
-            },
-            () => {
-                handleLocationError(true, infoWindow, map.getCenter());
-            }
-        );
-    } else {
-        handleLocationError(false, infoWindow, map.getCenter());
+    // Call global function if available (set by dashboard.js)
+    if (window.moveToCurrentPosition) {
+        window.moveToCurrentPosition();
     }
 }
 

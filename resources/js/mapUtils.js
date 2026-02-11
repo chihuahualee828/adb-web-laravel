@@ -6,22 +6,49 @@ export function createMarkerWithPopup(each, fields, latIndex, longIndex, icon, m
         lng: parseFloat(each[longIndex])
     };
     let count;
-    const content = each.map((val, index) => {
+    // Extract title if 'product_name' exists, else default
+    const nameIndex = fields.indexOf("product_name");
+    let title = "Details";
+    if (nameIndex > -1) {
+        title = each[nameIndex];
+    }
+
+    const itemsHtml = each.map((val, index) => {
         const field = fields[index];
-        if (field.includes("id") || field === "product_name" || field === "arrival_address_normalized") {
-            return `<p>${field}: ${val}
-                <button class="btn btn-outline-primary map-popup-btn " data-search="${val}" style="padding: 4px 6px; border-radius: 6px;">
-                    <i class="bi bi-search"></i>
-                </button>
-            </p>`;
-        }
+        
+        // Skip product_name from body since it's the header
+        if (field === "product_name") return "";
+        
         if (field === "count") {
             count = val;
         }
-        return `<p>${field}: ${val}</p>`;
+
+        let valueContent = val;
+        // Add search button for specific fields
+        if (field.includes("id") || field === "arrival_address_normalized") {
+            valueContent = `
+                <span>${val}</span>
+                <span class="popup-btn-container">
+                    <button class="map-popup-btn" data-search="${val}" title="Search this value">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                </span>`;
+        }
+
+        return `
+            <div class="popup-row">
+                <span class="popup-label">${field.replace(/_/g, " ")}</span>
+                <span class="popup-value">${valueContent}</span>
+            </div>`;
     }).join("");
 
-    let color = '#00FF00'; // bright neon green
+    const content = `
+        <div class="modern-map-popup">
+            <h6 class="popup-title">${title}</h6>
+            ${itemsHtml}
+        </div>`;
+
+    let color = '#00a6ff'; // bright neon green
     let normalized = 0;    // default normalization
     if (count) {   
         const maxIntensity = 200;  // lowest green/blue component
@@ -40,13 +67,13 @@ export function createMarkerWithPopup(each, fields, latIndex, longIndex, icon, m
         position: pos,
         icon: {
             path: google.maps.SymbolPath.CIRCLE,
-            scale: 8 + normalized * 10, // size varies slightly with count
+            scale: 6 + normalized * 10, // size varies slightly with count
             fillColor: color,
             fillOpacity: 0.9,
             strokeColor: '#333',
-            strokeWeight: 1,
+            strokeWeight: 0,
         },
-        map: map,
+        // map: map, // Handled by clusterer
     });
 
     marker.addListener("click", () => {
@@ -57,6 +84,50 @@ export function createMarkerWithPopup(each, fields, latIndex, longIndex, icon, m
     infoWindows.push(infowindow);
     markersArray.push(marker);
     bounds.extend(pos);
+}
+
+let currentLocationMarker = null;
+
+export function moveToCurrentPosition() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const pos = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                };
+
+                if (window.map) {
+                     window.map.panTo(pos);
+                     window.map.setZoom(15); // Zoom in
+                     
+                     if (currentLocationMarker) {
+                        currentLocationMarker.setMap(null);
+                     }
+
+                     currentLocationMarker = new google.maps.Marker({
+                        position: pos,
+                        map: window.map,
+                        animation: google.maps.Animation.DROP,
+                        title: "Current Location",
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            scale: 10,
+                            fillColor: "#4285F4",
+                            fillOpacity: 1,
+                            strokeColor: "white",
+                            strokeWeight: 2,
+                        },
+                     });
+                }
+            },
+            () => {
+                alert("Error: The Geolocation service failed.");
+            }
+        );
+    } else {
+        alert("Error: Your browser doesn't support geolocation.");
+    }
 }
 
 

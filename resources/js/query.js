@@ -39,7 +39,7 @@ export function submitQuery(filters) {
       })
       .catch(err => {
         if (err.name === 'AbortError') {
-          console.warn('Query was aborted');
+          console.log('%c[Abort] Previous main query aborted', "color: orange; font-weight: bold;");
         } else {
           console.error('Query error:', err);
         }
@@ -80,7 +80,7 @@ export function search(text) {
     })
     .catch(err => {
         if (err.name === 'AbortError') {
-          console.warn('Query was aborted');
+          console.log('%c[Abort] Previous search aborted', "color: orange; font-weight: bold;");
         } else {
           console.error('Query error:', err);
         }

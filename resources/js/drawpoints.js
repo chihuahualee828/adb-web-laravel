@@ -1,4 +1,7 @@
 import { createMarkerWithPopup } from './mapUtils.js';
+import { MarkerClusterer } from "@googlemaps/markerclusterer";
+
+let clusterer; // keep global
 
 // Shared state for this draw session
 export let markersArray = [];
@@ -19,15 +22,50 @@ export function drawPoints(response, icon) {
     const longIndex = fields.indexOf('long');
 
     // Clear existing markers
+    if (clusterer) {
+        clusterer.clearMarkers();
+    }
     markersArray.forEach(marker => marker.setMap(null));
     markersArray.length = 0; 
 
 	infoWindows.forEach(iw => iw.close());
-	infoWindows.length = 0; 
-	
-    for (let j = 0; j < rows.length; j++) {
-        const each = rows[j];
-        createMarkerWithPopup(each, fields, latIndex, longIndex, icon, map, infoWindows, markersArray, bounds);
+    infoWindows.length = 0;
+
+    const rmIdIndex = fields.indexOf('rm_id');
+
+    if (rmIdIndex !== -1) {
+        // Group by rm_id
+        const groups = {};
+        for (let j = 0; j < rows.length; j++) {
+            const row = rows[j];
+            const id = row[rmIdIndex];
+            if (!groups[id]) {
+                groups[id] = [];
+            }
+            groups[id].push(row);
+        }
+
+        // Add count field for display
+        const newFields = [...fields, 'location_count'];
+
+        Object.values(groups).forEach(group => {
+            const count = group.length;
+            // Create a new row with the count appended
+            const representativeRow = [...group[0], count];
+            createMarkerWithPopup(representativeRow, newFields, latIndex, longIndex, icon, map, infoWindows, markersArray, bounds);
+        });
+    } else {
+        for (let j = 0; j < rows.length; j++) {
+            const each = rows[j];
+            createMarkerWithPopup(each, fields, latIndex, longIndex, icon, map, infoWindows, markersArray, bounds);
+        }
+    }
+
+    // Initialize or update clusterer
+    if (!clusterer) {
+        clusterer = new MarkerClusterer({ map, markers: markersArray });
+    } else {
+        clusterer.addMarkers(markersArray);
     }
 
     map.setCenter(bounds.getCenter());
@@ -35,6 +73,49 @@ export function drawPoints(response, icon) {
     if (map.getZoom() > 12) {
         map.setZoom(12);
     }
+}
+
+export function createLayer(response, icon) {
+    const bounds = new google.maps.LatLngBounds();
+    const localMarkers = [];
+    const localInfoWindows = [];
+
+    const { fields, rows } = response;
+    const latIndex = fields.indexOf('lat');
+    const longIndex = fields.indexOf('long');
+    const rmIdIndex = fields.indexOf('rm_id');
+
+    // Ensure we have a map reference
+    const mapInstance = window.map;
+
+    if (rmIdIndex !== -1) {
+       // Group by rm_id
+       const groups = {};
+       for (let j = 0; j < rows.length; j++) {
+           const row = rows[j];
+           const id = row[rmIdIndex];
+           if (!groups[id]) {
+               groups[id] = [];
+           }
+           groups[id].push(row);
+       }
+   
+        // Add count field for display
+       const newFields = [...fields, 'location_count'];
+
+       Object.values(groups).forEach(group => {
+           const count = group.length;
+           const representativeRow = [...group[0], count];
+            createMarkerWithPopup(representativeRow, newFields, latIndex, longIndex, icon, mapInstance, localInfoWindows, localMarkers, bounds);
+       });
+   } else {
+       for (let j = 0; j < rows.length; j++) {
+           const each = rows[j];
+           createMarkerWithPopup(each, fields, latIndex, longIndex, icon, mapInstance, localInfoWindows, localMarkers, bounds);
+       }
+   }
+   
+   return localMarkers;
 }
 
 

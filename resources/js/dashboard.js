@@ -1,12 +1,27 @@
 import { submitQuery, search, checkLayer, unCheckLayer, currentRequestToken } from './query.js';
-import {drawPoints } from './drawpoints.js';
-import { drawPieChart, generateDataTable } from './drawpPie.js';
+import {drawPoints, createLayer } from './drawpoints.js';
+import { MarkerClusterer } from "@googlemaps/markerclusterer";
+let currentResponseData = null;
+import { drawPieChart, generateDataTable, abortAllCharts } from './drawpPie.js';
+import { moveToCurrentPosition } from './mapUtils.js';
+
+// Expose to window so initMap can call it if map loads later/earlier
+window.moveToCurrentPosition = moveToCurrentPosition;
+// Try to move immediately if map is already ready
+if (window.map) {
+  moveToCurrentPosition();
+}
 
   // Event listener for the Apply button
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', () => {    const currentLocBtn = document.getElementById('currentLocBtn');
+    if (currentLocBtn) {
+        currentLocBtn.addEventListener('click', moveToCurrentPosition);
+    }
+
     const applyBtn = document.getElementById('applyQuery');
     if (applyBtn) {
       applyBtn.addEventListener('click', () => {
+        abortAllCharts();
         const query = document.getElementById('query');
         const county = document.getElementById('county');
         const district = document.getElementById('district');
@@ -40,6 +55,14 @@ import { drawPieChart, generateDataTable } from './drawpPie.js';
             const data = response.data;
             console.log("Query result:", data);
             if (data && data.rows.length > 0) {
+              
+                if (data.pagination && data.pagination.last_page > 1) {
+                    console.warn(`Data truncated. Showing page ${data.pagination.current_page} of ${data.pagination.last_page}. Total records: ${data.pagination.total}`);
+                    // Optional: You could show a UI notification here
+                    // appendBotMessage(`Note: Showing first ${data.pagination.per_page} results of ${data.pagination.total}.`);
+                }
+
+                currentResponseData = data;
                 drawPoints(data, "dollar");
                 generateDataTable(data);
                 if(filters.query == "Best Seller"){
@@ -74,6 +97,7 @@ import { drawPieChart, generateDataTable } from './drawpPie.js';
   
     if (searchBtn && searchInput) {
       searchBtn.addEventListener('click', () => {
+        abortAllCharts();
         const text = searchInput.value.trim();
         if (text !== "") {
           search(text).then(response => {
@@ -83,6 +107,7 @@ import { drawPieChart, generateDataTable } from './drawpPie.js';
             }
             const data = response.data;
             if (data.rows && data.rows.length > 0) {
+                currentResponseData = data;
                 drawPoints(data, "dollar");
                 generateDataTable(data);
                 
@@ -120,47 +145,6 @@ import { drawPieChart, generateDataTable } from './drawpPie.js';
     }
   });
 
-
-// // resources/js/dashboard.js
-// document.addEventListener("DOMContentLoaded", () => {
-//     // 1) Leaflet map
-//     const map = L.map("map").setView([25.03, 121.5], 10);
-//     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-//       attribution: "",
-//     }).addTo(map);
-  
-//     // 2) DataTable
-//     const table = $("#dataTable").DataTable({
-//       processing: true,
-//       serverSide: true,
-//       ajax: {
-//         url: "/api/data",  // implement later
-//         data: (d) => {
-//           $("#filterForm").serializeArray()
-//             .forEach((f) => (d[f.name] = f.value));
-//         },
-//       },
-//       columns: [
-//         { data: "product_id" },
-//         { data: "product_name" },
-//         { data: "arrival_address_normalized" },
-//         { data: "lat" },
-//         { data: "long" },
-//         { data: "count" },
-//       ],
-//     });
-  
-//     // 3) Charts
-//     const countyChart   = new Chart($("#countyChart"),   { type: "pie", data: {} });
-//     const districtChart = new Chart($("#districtChart"), { type: "pie", data: {} });
-//     const seasonChart   = new Chart($("#seasonChart"),   { type: "pie", data: {} });
-  
-//     // 4) “Apply” button refresh
-//     $("#btnApply").on("click", () => {
-//       table.ajax.reload();
-//       // later: fetch & update charts + map layers
-//     });
-//   });
   
 
   
@@ -366,6 +350,7 @@ document.addEventListener('click', function (e) {
 
     // Only respond if the clicked element is a map popup search button
     if (searchBtn) {
+        abortAllCharts();
         const searchText = searchBtn.dataset.search;
         if (searchText) {
             search(searchText).then(response => {
@@ -376,6 +361,7 @@ document.addEventListener('click', function (e) {
                 const data = response.data;
 
                 if (data && data.rows.length > 0) {
+                    currentResponseData = data;
                     drawPoints(data, "dollar");
                     generateDataTable(data);
                     if(data.fields.indexOf("product_id")==0){
@@ -410,86 +396,126 @@ document.addEventListener('click', function (e) {
 
 
 
-let savedLayers = {};
-let layerCount = 0;
+const activeLayers = {}; // To store markers/clusterers for active saved layers
 
-import { markersArray, infoWindows } from './drawpoints.js';
-let lastSavedMarkersArray;
+function renderSavedLayers() {
+    const container = document.getElementById("customLayers");
+    container.innerHTML = '';
+    const saved = JSON.parse(localStorage.getItem('savedCustomLayers') || '[]');
+    
+    if (saved.length > 0) {
+        container.classList.remove("d-none");
+    } else {
+        container.classList.add("d-none");
+    }
+
+    saved.forEach(layer => {
+        const row = document.createElement("div");
+        row.className = "d-flex align-items-center mb-2";
+
+        const toggle = document.createElement("div");
+        toggle.className = "layer-block flex-grow-1 " + (layer.active ? "active" : "");
+        toggle.textContent = layer.name;
+        // toggle.dataset.layerId = layer.id;
+        
+        toggle.addEventListener("click", function () {
+            const isActive = this.classList.toggle("active");
+            layer.active = isActive;
+            updateSavedLayerState(layer.id, isActive);
+            
+            if (isActive) {
+                drawSavedLayer(layer);
+            } else {
+                removeSavedLayer(layer.id);
+            }
+        });
+
+        const delBtn = document.createElement("button");
+        delBtn.className = "btn btn-sm btn-danger ms-2";
+        delBtn.innerHTML = '<i class="bi bi-trash"></i>';
+        delBtn.addEventListener("click", () => {
+             deleteSavedLayer(layer.id);
+        });
+
+        row.appendChild(toggle);
+        row.appendChild(delBtn);
+        container.appendChild(row);
+    });
+}
+
+function updateSavedLayerState(id, active) {
+    const saved = JSON.parse(localStorage.getItem('savedCustomLayers') || '[]');
+    const idx = saved.findIndex(l => l.id === id);
+    if (idx !== -1) {
+        saved[idx].active = active;
+        localStorage.setItem('savedCustomLayers', JSON.stringify(saved));
+    }
+}
+
+function deleteSavedLayer(id) {
+    removeSavedLayer(id); 
+    const saved = JSON.parse(localStorage.getItem('savedCustomLayers') || '[]');
+    const newSaved = saved.filter(l => l.id !== id);
+    localStorage.setItem('savedCustomLayers', JSON.stringify(newSaved));
+    renderSavedLayers();
+}
+
+function drawSavedLayer(layer) {
+    if (activeLayers[layer.id]) return; 
+    if (!window.map) return;
+
+    const markers = createLayer(layer.data, "dollar");
+    
+    const clusterer = new MarkerClusterer({ map: window.map, markers: markers });
+    
+    activeLayers[layer.id] = {
+        markers,
+        clusterer
+    };
+}
+
+function removeSavedLayer(id) {
+    if (activeLayers[id]) {
+        activeLayers[id].clusterer.clearMarkers();
+        activeLayers[id].markers.forEach(m => m.setMap(null));
+        delete activeLayers[id];
+    }
+}
+
 document.getElementById("saveLayerBtn").addEventListener("click", () => {
-    if (!markersArray || markersArray.length === 0) {
-        // alert("No markers to save!");
+    if (!currentResponseData) {
+        alert("No query data to save! Run a query first.");
         return;
     }
 
-    if (lastSavedMarkersArray) {
-        const isSame = markersArray.length === lastSavedMarkersArray.length && markersArray.every((marker, i) => marker === lastSavedMarkersArray[i]);
-        if (isSame) {
-            console.log("Markers unchanged — skip saving.");
-            return;
-        }
-    } else {
-        lastSavedMarkersArray = [...markersArray];
-    }
+    const saved = JSON.parse(localStorage.getItem('savedCustomLayers') || '[]');
+    const newId = Date.now();
+    const newLayer = {
+        id: newId,
+        name: `Layer ${saved.length + 1}`,
+        data: currentResponseData,
+        active: true 
+    };
     
+    saved.push(newLayer);
+    localStorage.setItem('savedCustomLayers', JSON.stringify(saved));
+    
+    renderSavedLayers();
+    drawSavedLayer(newLayer); 
+});
 
-        
-    const currentLayerId = `layer_${++layerCount}`;
-    //   savedLayers[currentLayerId] = [...markersArray];
-    savedLayers[currentLayerId] = markersArray.map((marker, i) => ({
-        marker,
-        infoWindow: infoWindows[i], // assumes same order
-    }));
-
-    // // Create checkbox
-    // const label = document.createElement("label");
-    // label.className = "form-check-label";
-    // label.innerText = `Layer ${layerCount}`;
-
-    // Create a new toggle-style block
-    const toggle = document.createElement("div");
-    toggle.className = "layer-block active"; // start active
-    toggle.textContent = `Layer ${layerCount}`;
-    toggle.dataset.layer = currentLayerId;
-
-    // const checkbox = document.createElement("input");
-    // checkbox.type = "checkbox";
-    // checkbox.className = "form-check-input me-1";
-    // checkbox.checked = true;
-    // checkbox.id = currentLayerId;
-
-    // //   checkbox.addEventListener("change", function () {
-    // //     const visible = this.checked;
-    // //     savedLayers[currentLayerId].forEach(marker => marker.setVisible(visible));
-    // //   });
-    // checkbox.addEventListener("change", function () {
-    //     const visible = this.checked;
-    //     savedLayers[currentLayerId].forEach(({ marker, infoWindow }) => {
-    //     marker.setVisible(visible);
-    //     if (!visible) infoWindow.close(); // close if layer is hidden
-    //     });
-    // });
-
-
-
-    toggle.addEventListener("click", function () {
-        const isActive = this.classList.toggle("active");
-        savedLayers[currentLayerId].forEach(({ marker, infoWindow }) => {
-            marker.setVisible(isActive);
-            if (!isActive) infoWindow.close();
-        });
-    });
-
-    const container = document.getElementById("customLayers");
-    container.classList.remove("d-none");
-    container.appendChild(toggle);
-
-
-    // const wrapper = document.createElement("div");
-    // wrapper.className = "form-check";
-    // wrapper.appendChild(checkbox);
-    // wrapper.appendChild(label);
-
-    document.getElementById("customLayers").appendChild(wrapper);
+document.addEventListener("DOMContentLoaded", () => {
+     renderSavedLayers();
+     const saved = JSON.parse(localStorage.getItem('savedCustomLayers') || '[]');
+     
+     const checkMap = setInterval(() => {
+         if (window.map) {
+             clearInterval(checkMap);
+             saved.forEach(l => {
+                 if (l.active) drawSavedLayer(l);
+             });
+         }
+     }, 500);
 });
 
 
