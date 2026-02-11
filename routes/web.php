@@ -35,3 +35,4 @@ use App\Http\Controllers\ChatController;
 
 // Route::get('/', [ChatController::class, 'index']);
 Route::post('/send', [ChatController::class, 'send'])->name('chat.send');
+Route::get('/models', [ChatController::class, 'getModels']);

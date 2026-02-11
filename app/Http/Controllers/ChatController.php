@@ -11,6 +11,36 @@ use Illuminate\Support\Facades\Storage;
 class ChatController extends Controller
 {
 
+    public function getModels()
+    {
+        $endpoint = rtrim(env('MCP_BRIDGE_URL'), '/') . '/v1/models';
+        $defaultModel = env('MCP_MODEL');
+
+        try {
+            $response = Http::timeout(5)->get($endpoint);
+            
+            if ($response->successful()) {
+                return response()->json([
+                    'models' => $response->json()['data'] ?? [],
+                    'default_model' => $defaultModel
+                ]);
+            }
+            
+            return response()->json([
+                'error' => 'Failed to fetch models',
+                'models' => [],
+                'default_model' => $defaultModel
+            ], 500);
+
+        } catch (\Exception $e) {
+             return response()->json([
+                'error' => $e->getMessage(),
+                'models' => [],
+                'default_model' => $defaultModel
+            ], 500);
+        }
+    }
+
     public function send(Request $request)
     {   
         if (!$request->session()->has('schema')) {
@@ -61,9 +91,11 @@ class ChatController extends Controller
             'content' => $request->input('message'),
         ];
 
+        $selectedModel = $request->input('model') ?? env('MCP_MODEL');
+
         // Prepare the payload for the API request
         $payload = [
-            'model' => env('MCP_MODEL'),
+            'model' => $selectedModel,
             'messages' => $messages,
             'stream' => false, // Set to true if you want to stream responses
         ];

@@ -65,14 +65,19 @@
         </div> --}}
         <div class="ai-popup shadow-lg rounded-3" id="aiChatPopup" style="display: none;">
           <div class="popup-header d-flex justify-content-between align-items-center p-2 border-bottom cursor-move" id="popupDragHandle">
-            <h5 class="popup-title mb-0">🤖 AI Assistant</h5>
+            <div class="d-flex align-items-center gap-2">
+                <h5 class="popup-title mb-0">🤖 AI Assistant</h5>
+                <select id="modelSelect" class="form-select form-select-sm py-0" style="width: auto; height: 24px; font-size: 0.8rem;">
+                    <!-- Models will be loaded here -->
+                </select>
+            </div>
             <button type="button" class="btn-close" id="closeAiPopup" aria-label="Close"></button>
           </div>
         
-          <div class="popup-body d-flex flex-column p-2" style="height: 100%;">
-            <div id="chat-box" class="flex-grow-1 mb-2 chat-box">
-              <div class="message">
-                <div class="ai-label">AI:</div>
+          <div class="popup-body d-flex flex-column p-0">
+            <div id="chat-box" class="flex-grow-1 chat-box">
+              <div class="message ai-message">
+                <div class="ai-label">AI Assistant</div>
                 <div class="ai-reply">How can I help you today?</div>
               </div>
             </div>

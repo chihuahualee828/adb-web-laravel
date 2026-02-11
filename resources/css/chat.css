@@ -1,184 +1,266 @@
-.offcanvas-narrow {
-    width: 100px; /* or whatever width you prefer */
-  }
+/* Modern Chat CSS */
 
-  .chat-box {
+/* Popup Wrapper */
+.ai-popup {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 480px;      /* Increased width */
+    height: 650px;     /* Increased height */
+    max-height: 80vh;
+    background: #ffffff;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(0,0,0,0.05);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    z-index: 1050;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    transition: all 0.3s ease;
+    display: none;
+}
+.ai-popup.show {
+    display: flex !important; 
+}
+
+/* Header */
+.popup-header {
+    background: #f8f9fa;
+    border-bottom: 1px solid #efefef;
+    padding: 12px 16px;
+    cursor: move;
+}
+
+.popup-title {
+    font-weight: 600;
+    color: #333;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Body container - takes remaining height */
+.popup-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Contains the scrollable chat-box */
+    min-height: 0;   /* Crucial for nested flex scrolling */
+}
+
+/* Chat Area */
+.chat-box {
+    flex: 1;
     overflow-y: auto;
-    background: #fafafa;
-    border: 1px solid #ddd;
-    padding: 10px;
-    border-radius: 5px;
-    font-family: 'Segoe UI', sans-serif;
-    font-size: 14px;
-  }
-  
-  .message {
+    background: #ffffff;
+    padding: 16px;
+    scroll-behavior: smooth;
+    border: none;
+    border-radius: 0;
+}
+
+.chat-box::-webkit-scrollbar {
+    width: 6px;
+}
+.chat-box::-webkit-scrollbar-track {
+    background: transparent;
+}
+.chat-box::-webkit-scrollbar-thumb {
+    background-color: #d1d5db;
+    border-radius: 20px;
+}
+
+/* Message Groups */
+.message {
+    display: flex;
+    flex-direction: column;
     margin-bottom: 16px;
-  }
-  
-  .user-label {
-    color: #007bff;
-    font-weight: bold;
-  }
-  
-  .ai-label {
-    color: #28a745;
-    font-weight: bold;
-  }
-  
-  .user-reply,
-  .ai-reply {
-    margin-top: 4px;
-    white-space: pre-wrap;
-  }
-  
+    max-width: 100%;
+}
 
+.user-message {
+    align-items: flex-end;
+}
 
-  .tool-section {
-    background: #fff3cd;
-    border: 1px solid #ffeeba;
+.ai-message {
+    align-items: flex-start;
+}
+
+/* Labels */
+.user-label, .ai-label {
+    font-size: 11px;
+    color: #9ca3af;
+    margin-bottom: 4px;
+    padding: 0 4px;
+}
+
+/* Bubbles */
+.user-reply {
+    background: #2563eb; 
+    color: white;
+    padding: 10px 14px;
+    border-radius: 12px 12px 2px 12px;
+    font-size: 14px;
+    line-height: 1.5;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    max-width: 85%;
+    word-wrap: break-word;
+    margin-top: 0;
+}
+
+.ai-reply {
+    background: #f3f4f6; 
+    color: #1f2937;
+    padding: 10px 14px;
+    border-radius: 12px 12px 12px 2px;
+    font-size: 14px;
+    line-height: 1.5;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    max-width: 90%;
+    word-wrap: break-word;
+    margin-top: 0;
+}
+
+/* Markdown in AI reply */
+.ai-reply p { margin-bottom: 8px; }
+.ai-reply p:last-child { margin-bottom: 0; }
+.ai-reply pre {
+    background: #e5e7eb;
+    padding: 8px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 8px 0;
+    max-width: 100%;
+}
+.ai-reply code {
+    background: rgba(0,0,0,0.05);
+    padding: 2px 4px;
     border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.9em;
+}
+
+/* Table Styles in AI Reply */
+.ai-reply table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 0.85em; /* Slightly smaller for dense data */
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.05);
+    background: #fff;
+    display: block; /* Allow horizontal scroll if needed */
+    overflow-x: auto;
+}
+
+.ai-reply thead {
+    background-color: #f8fafc;
+}
+
+.ai-reply th, .ai-reply td {
+    padding: 6px 10px;
+    border: 1px solid #e5e7eb;
+    text-align: left;
+    white-space: nowrap; /* Prevent wrapping for cleaner look */
+}
+
+.ai-reply th {
+    font-weight: 600;
+    color: #374151;
+}
+
+.ai-reply tr:nth-child(even) {
+    background-color: #f9fafb;
+}
+
+.ai-reply tr:hover {
+    background-color: #f0fdf4; /* Slight green tint on hover for tracking */
+}
+
+/* Tool Sections */
+.tool-section {
+    background: #fff8e1;
+    border: 1px solid #ffecb3;
+    border-radius: 8px;
     padding: 10px;
     margin: 8px 0;
-    font-size: 14px;
-  }
-
-  .tool-section pre {
-    background: #f8f9fa;
-    padding: 8px;
-    overflow-x: auto;
+    font-size: 12px;
+    color: #664d03;
+    max-width: 90%;
+    align-self: flex-start;
+}
+.tool-section pre {
+    background: rgba(255,255,255,0.6);
+    padding: 6px;
     border-radius: 4px;
-  }
+    white-space: pre-wrap;
+    word-break: break-all;
+}
 
-  .spinner {
+/* Input Form */
+#chat-form {
+    background: #fff;
+    padding: 12px;
+    border-top: 1px solid #f0f0f0;
+    margin: 0;
+}
+
+#message {
+    border-radius: 20px 0 0 20px;
+    border: 1px solid #e5e7eb;
+    padding-left: 16px;
+    box-shadow: none;
+}
+#message:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.popup-body button[type="submit"] {
+    border-radius: 0 20px 20px 0;
+    padding: 0 20px;
+    background: #2563eb;
+    border-color: #2563eb;
+    color: white;
+}
+.popup-body button[type="submit"]:hover {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+}
+
+/* Spinner */
+.spinner {
     display: inline-block;
     width: 20px;
     height: 20px;
-    border: 4px solid #ccc;
-    border-top: 4px solid #555;
+    border: 3px solid rgba(0,0,0,0.1);
     border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-top: 6px;
-  }
+    border-top-color: #2563eb;
+    animation: spin 1s ease-in-out infinite;
+    margin: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
+/* Animations */
+.fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 
-  .ai-label {
-    opacity: 0;
-  }
-
-
-  .ai-reply {
-    opacity: 0;
-  }
-
-  .fade-in {
-    animation: fadeIn 0.5s ease-in forwards;
-  }
-
-  @keyframes fadeIn {
-    to {
-      opacity: 1;
-    }
-  }
-  
-/* Popup wrapper */
-.ai-popup {
-    position: fixed;
-    bottom: 30px;      /* ⬇ Push up from bottom */
-    right: 20px;       /* ⬅ Push in from right */
-    width: 400px;
-    height: 500px;
-    background: rgba(220, 235, 255, 0.6);   /* subtle bluish transparent */
-    backdrop-filter: blur(10px);           /* optional glass effect */
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 16px;
-    display: none;
-    opacity: 0;
-    overflow: hidden;
-    transition: all 0.4s ease;
-    z-index: 1055;
-  }
-  
-  
-  .ai-popup.show {
-    display: block;
-    opacity: 1;
-  }
-  
-
-  @media (max-width: 768px) {
+/* Mobile Responsive */
+@media (max-width: 480px) {
     .ai-popup {
-      right: 10px;        /* push further inward */
-      width: 90vw;        /* take more width but leave margin */
+        width: 100%;
+        height: 100%;
+        bottom: 0;
+        right: 0;
+        border-radius: 0;
+        max-height: none;
     }
-  }
-  
-  @media (max-width: 480px) {
-    .ai-popup {
-      right: 5px;
-      left: 5px;
-      width: auto;        /* full width minus left/right */
-    }
-  }
-  
-
-  .popup-header {
-    background-color: rgba(240, 248, 255, 0.85);
-    backdrop-filter: blur(8px);
-    padding: 14px 18px;
-    font-weight: 600;
-    font-size: 1rem;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    color: #2b2f34;
-    border-top-left-radius: 16px;
-    border-top-right-radius: 16px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-  }
-  
-  .popup-title {
-    font-size: 1.15rem;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-    color: #418aff;
-    font-family: "Segoe UI", "Helvetica Neue", sans-serif;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    user-select: none;
-  }
-  
-  /* Body Scrollable */
-  .popup-body {
-    overflow-y: auto;
-    max-height: calc(100% - 60px);
-    padding: 16px;
-  }
-  .cursor-move {
-    cursor: move;
-  }
-  
-  
-
-  .popup-body::-webkit-scrollbar {
-    width: 6px;
-  }
-  
-  .popup-body::-webkit-scrollbar-thumb {
-    background-color: rgba(0,0,0,0.2);
-    border-radius: 3px;
-  }
-
-
-  #popupDragHandle {
-    cursor: grab;
-  }
-  
-  #popupDragHandle:active {
-    cursor: grabbing;
-  }
+}

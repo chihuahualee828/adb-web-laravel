@@ -1,35 +1,50 @@
 import * as Chat from './chat.js'; 
 
 
-// export async function submitChatMessage(message) {
-  
-//     // const input = document.getElementById("chatInput");
-//     // const message = input.value.trim();
-//     if (!message) return;
-//     console.log("Message:", message);
-//     // appendUserMessage(message); // show user message on screen
-  
-//     try {
-//       const res = await fetch('/api/ai-chat', {
-//         method: 'POST',
-//         headers: {
-//           'Content-Type': 'application/json',
-//           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-//         },
-//         body: JSON.stringify({ message })
-//       });
-  
-//       const data = await res.json();
-//     //   appendBotMessage(data.response); // display AI's reply
-//       input.value = "";
-//     } catch (err) {
-//       console.error("Error talking to LLM:", err);
-//     //   appendBotMessage("⚠️ Sorry, something went wrong.");
-//     }
-//   }
+async function loadModels() {
+    try {
+        const response = await fetch('/models');
+        if (!response.ok) throw new Error('Failed to load models');
+        
+        const data = await response.json();
+        const models = data.models || [];
+        const defaultModel = data.default_model;
+        
+        const select = document.getElementById('modelSelect');
+        if (!select) return;
 
+        select.innerHTML = '';
+        
+        const storedModel = localStorage.getItem('selectedModel');
+        let modelToSelect = storedModel || defaultModel;
+        
+        // If stored model is not in the list, fallback to default
+        if (models.length > 0 && !models.some(m => m.id === modelToSelect)) {
+            modelToSelect = defaultModel;
+        }
 
+        models.forEach(model => {
+            const option = document.createElement('option');
+            option.value = model.id;
+            option.textContent = model.id; // Or model.name if available
+            select.appendChild(option);
+        });
 
+        if (modelToSelect) {
+            select.value = modelToSelect;
+        }
+
+        select.addEventListener('change', (e) => {
+            localStorage.setItem('selectedModel', e.target.value);
+        });
+
+    } catch (error) {
+        console.error('Error loading models:', error);
+    }
+}
+
+// Load models when DOM is ready
+document.addEventListener('DOMContentLoaded', loadModels);
 
   document.getElementById('chat-form').addEventListener('submit', function(e) {
     e.preventDefault();
@@ -41,13 +56,18 @@ import * as Chat from './chat.js';
     const msgId = Chat.addAssistantPlaceholder();
     input.value = '';
     
+    const selectedModel = document.getElementById('modelSelect')?.value;
+
     fetch('/send', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
       },
-      body: JSON.stringify({ message: text })
+      body: JSON.stringify({ 
+          message: text,
+          model: selectedModel 
+      })
     })
     .then(res => res.json())
     .then(data => {

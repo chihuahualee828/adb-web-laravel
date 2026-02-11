@@ -1,10 +1,12 @@
+import { marked } from 'marked';
+
 const chatBox = document.getElementById('chat-box');
 let messageIdCounter = 0;
 
 export function appendUserMessage(text) {
   const div = document.createElement('div');
-  div.classList.add('message');
-  div.innerHTML = `<div class="user-label fade-in">You:</div><div class="user-reply fade-in">${text}</div>`;
+  div.classList.add('message', 'user-message');
+  div.innerHTML = `<div class="user-label fade-in">You</div><div class="user-reply fade-in">${text}</div>`;
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
@@ -12,10 +14,10 @@ export function appendUserMessage(text) {
 export function addAssistantPlaceholder() {
   const id = 'msg-' + (++messageIdCounter);
   const div = document.createElement('div');
-  div.classList.add('message');
+  div.classList.add('message', 'ai-message');
   div.id = id;
   div.innerHTML = `
-    <div class="ai-label fade-in">AI:</div>
+    <div class="ai-label fade-in">AI Assistant</div>
     <div class="ai-reply"  style="opacity: 1">
       <div class="spinner"></div>
     </div>
@@ -29,11 +31,10 @@ export function updateAssistantReply(id, content) {
   const el = document.getElementById(id);
   if (el) {
     const replyDiv = el.querySelector('.ai-reply');
-    replyDiv.textContent = content;
+    replyDiv.innerHTML = marked.parse(content);
     replyDiv.style.opacity = '0'; 
     replyDiv.classList.add('fade-in');
   }
-  
 }
 
 
