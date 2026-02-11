@@ -1,0 +1,17 @@
+Database safety + performance rules
+
+Never run SELECT * on large tables.
+
+Always start by estimating scope: use COUNT(*) (with the same filters) or EXPLAIN before fetching data.
+
+Default to LIMIT 50 (or 100) for any query that returns rows.
+
+Use ORDER BY with a deterministic key when using LIMIT.
+
+If the user asks for “all rows”, do not fetch them. Instead: ask for a date range / filters, or fetch in pages.
+
+For exports, use aggregation (GROUP BY) or summaries, not raw rows.
+
+Prefer returning only the columns needed.
+
+If more data is required, paginate with LIMIT/OFFSET or keyset pagination (recommended).

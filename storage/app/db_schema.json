@@ -1,0 +1,99 @@
+[
+    {
+      "name": "prodcut_category_rank_by_county_q3",
+      "description": "Product category rankings by county for the third quarter."
+    },
+    {
+      "name": "prodcut_category_rank_by_county_q4",
+      "description": "Product category rankings by county for the fourth quarter."
+    },
+    {
+      "name": "供應商出貨_直店配",
+      "description": "Supplier shipments directly to stores."
+    },
+    {
+      "name": "retgood_20120823",
+      "description": "Return goods data as of August 23, 2012."
+    },
+    {
+      "name": "supplier",
+      "description": "Information about suppliers."
+    },
+    {
+      "name": "prodcut_category_rank_by_county",
+      "description": "Product category rankings by county."
+    },
+    {
+      "name": "prodcut_category_rank_by_district",
+      "description": "Product category rankings by district."
+    },
+    {
+      "name": "prodcut_category_rank_by_district_q1",
+      "description": "Product category rankings by district for the first quarter."
+    },
+    {
+      "name": "prodcut_category_rank_by_district_q2",
+      "description": "Product category rankings by district for the second quarter."
+    },
+    {
+      "name": "prodcut_category_rank_by_district_q3",
+      "description": "Product category rankings by district for the third quarter."
+    },
+    {
+      "name": "prodcut_category_rank_by_district_q4",
+      "description": "Product category rankings by district for the fourth quarter."
+    },
+    {
+      "name": "town_moi_1111118",
+      "description": "Town-level(區, districts under each county) geometry data for spatial query"
+    },
+    {
+      "name": "prodcut_category_rank_by_county_q1",
+      "description": "Product category rankings by county for the first quarter."
+    },
+    {
+      "name": "倉出_店配",
+      "description": "Warehouse dispatches to stores."
+    },
+    {
+      "name": "prodcut_category_rank_by_county_q2",
+      "description": "Product category rankings by county for the second quarter."
+    },
+    {
+      "name": "stlend",
+      "description": "End-of-period stock levels."
+    },
+    {
+      "name": "package_size",
+      "description": "Information about package sizes."
+    },
+    {
+      "name": "product_list_2012",
+      "description": "List of products available in 2012."
+    },
+    {
+      "name": "geography_columns",
+      "description": "Metadata about geography columns in spatial databases."
+    },
+    {
+      "name": "geometry_columns",
+      "description": "Metadata about geometry columns in spatial databases."
+    },
+    {
+      "name": "spatial_ref_sys",
+      "description": "Spatial reference system definitions."
+    },
+    {
+      "name": "order_combined_pd",
+      "description": "Combined order data with product details, rs_id(Order id) is primary key."
+    },
+    {
+      "name": "product_warehouse",
+      "description": "Information about product storage in warehouses."
+    },
+    {
+      "name": "product_list_combined",
+      "description": "List of products, product_id is primary key."
+    }
+  ]
+  
