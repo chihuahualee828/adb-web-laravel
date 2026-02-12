@@ -17,11 +17,15 @@
     z-index: 1050;
     overflow: hidden;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    transition: all 0.3s ease;
+    transition: opacity 0.3s ease, transform 0.3s ease;
     display: none;
+    opacity: 0;
+    transform: translateY(20px);
 }
 .ai-popup.show {
-    display: flex !important; 
+    display: flex !important;
+    opacity: 1;
+    transform: translateY(0);
 }
 
 /* Header */

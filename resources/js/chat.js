@@ -132,21 +132,25 @@ const dragHandle = document.getElementById('popupDragHandle');
   
   // Show popup
   openBtn.addEventListener('click', () => {
-    popup.style.display = 'block';
-    setTimeout(() => popup.classList.add('show'), 10);
+    popup.style.display = 'flex'; // Changed from 'block' to match CSS
+    // Force reflow to enable transition
+    void popup.offsetWidth;
+    popup.classList.add('show');
   });
 
   openBtn2.addEventListener('click', () => {
-    popup.style.display = 'block';
-    setTimeout(() => popup.classList.add('show'), 10);
+    popup.style.display = 'flex';
+    void popup.offsetWidth;
+    popup.classList.add('show');
   });
   
   // Close popup
   closeBtn.addEventListener('click', () => {
     popup.classList.remove('show');
+    // Wait for transition to finish before hiding
     setTimeout(() => {
       popup.style.display = 'none';
-    }, 300);
+    }, 300); // Match CSS transition duration
   });
   
 
