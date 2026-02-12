@@ -3,12 +3,20 @@ import * as Chat from './chat.js';
 
 async function loadModels() {
     try {
-        const response = await fetch('/models');
-        if (!response.ok) throw new Error('Failed to load models');
-        
-        const data = await response.json();
-        const models = data.models || [];
-        const defaultModel = data.default_model;
+    const cached = localStorage.getItem('modelsCache');
+    let data;
+
+    if (cached) {
+      data = JSON.parse(cached);
+    } else {
+      const response = await fetch('/models');
+      if (!response.ok) throw new Error('Failed to load models');
+      data = await response.json();
+      localStorage.setItem('modelsCache', JSON.stringify(data));
+    }
+
+    const models = data.models || [];
+    const defaultModel = data.default_model;
         
         const select = document.getElementById('modelSelect');
         if (!select) return;
