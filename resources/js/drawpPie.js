@@ -1,7 +1,7 @@
 // Remove the import as we will manage controllers locally
 // import { currentAbortController } from './query.js'; 
 
-const chartAbortControllers = {};
+export const chartAbortControllers = {};
 
 export function abortAllCharts() {
     Object.keys(chartAbortControllers).forEach(key => {
@@ -12,6 +12,11 @@ export function abortAllCharts() {
         delete chartAbortControllers[key];
     });
 }
+
+// Abort all chart requests when page is being unloaded (refresh/close)
+window.addEventListener('beforeunload', () => {
+    abortAllCharts();
+});
 
 export function drawPieChart({ searchText, searchBy, groupBy, county = null }) {
     const canvasId =

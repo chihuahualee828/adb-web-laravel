@@ -1,7 +1,23 @@
 // query.js
+import { getCachedLayer, saveCachedLayer } from './indexedDbUtils.js';
+import { chartAbortControllers } from './drawpPie.js';
 
 export let currentAbortController = null;
 export let currentRequestToken = null;
+
+// Abort all pending requests when page is being unloaded (refresh/close)
+window.addEventListener('beforeunload', () => {
+    if (currentAbortController) {
+        currentAbortController.abort();
+    }
+    
+    // Also abort all chart requests synchronously
+    Object.keys(chartAbortControllers).forEach(key => {
+        if (chartAbortControllers[key]) {
+            chartAbortControllers[key].abort();
+        }
+    });
+});
 
 export function submitQuery(filters) {
     // const filters = localStorage.getItem('filters');
@@ -89,14 +105,30 @@ export function search(text) {
   
 
 
-export function checkLayer(id) {
+export async function checkLayer(id) {
 
     // const checkBox = document.getElementById(id);
     console.log("Checkbox ID:", id);
+
+    // Check IndexedDB first
+    const cachedData = await getCachedLayer(id);
+    if (cachedData) {
+        console.log("Using IndexedDB cached layer for:", id);
+        map.data.addGeoJson(cachedData);
+        map.data.setStyle({ fillColor: 'green' });
+        return;
+    }
+
     const data = {
       type: "FeatureCollection",
       features: [],
     };
+
+    // Abort previous layer request if exists
+    if (currentAbortController) {
+        currentAbortController.abort();
+    }
+    currentAbortController = new AbortController();
 
     // if (checkBox.checked) {
       fetch('/get-layer', {
@@ -105,7 +137,8 @@ export function checkLayer(id) {
           'Content-Type': 'application/json',
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         },
-        body: JSON.stringify({ layer: id })
+        body: JSON.stringify({ layer: id }),
+        signal: currentAbortController.signal
       })
       .then(response => response.json())
       .then(response => {
@@ -125,11 +158,20 @@ export function checkLayer(id) {
           data.features.push(feature);
           featureId++;
         });
+
+        // Save to IndexedDB
+        saveCachedLayer(id, data);
   
         map.data.addGeoJson(data);
         map.data.setStyle({ fillColor: 'green' });
       })
-      .catch(err => console.error("Layer fetch failed:", err));
+      .catch(err => {
+        if (err.name === 'AbortError') {
+          console.log('%c[Abort] Layer fetch aborted', "color: orange; font-style: italic;");
+        } else {
+          console.error("Layer fetch failed:", err);
+        }
+      });
   
   }
 
